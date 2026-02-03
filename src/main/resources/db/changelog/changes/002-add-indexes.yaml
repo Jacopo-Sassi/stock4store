@@ -1,0 +1,132 @@
+databaseChangeLog:
+  - changeSet:
+      id: 002-add-articoli-indexes
+      author: pw-team
+      changes:
+        - createIndex:
+            indexName: idx_articoli_gruppo
+            tableName: articoli
+            columns:
+              - column:
+                  name: gruppo
+        - createIndex:
+            indexName: idx_articoli_descrizione
+            tableName: articoli
+            columns:
+              - column:
+                  name: descrizione
+        - createIndex:
+            indexName: idx_articoli_codfornitore
+            tableName: articoli
+            columns:
+              - column:
+                  name: codfornitore
+        - createIndex:
+            indexName: idx_articoli_ean
+            tableName: articoli
+            columns:
+              - column:
+                  name: ean
+        - createIndex:
+            indexName: idx_articoli_stato
+            tableName: articoli
+            columns:
+              - column:
+                  name: stato
+      rollback:
+        - dropIndex:
+            indexName: idx_articoli_gruppo
+            tableName: articoli
+        - dropIndex:
+            indexName: idx_articoli_descrizione
+            tableName: articoli
+        - dropIndex:
+            indexName: idx_articoli_codfornitore
+            tableName: articoli
+        - dropIndex:
+            indexName: idx_articoli_ean
+            tableName: articoli
+        - dropIndex:
+            indexName: idx_articoli_stato
+            tableName: articoli
+
+  - changeSet:
+      id: 002-add-ordini-indexes
+      author: pw-team
+      changes:
+        - createIndex:
+            indexName: idx_ordini_stato
+            tableName: ordini
+            columns:
+              - column:
+                  name: stato
+        - createIndex:
+            indexName: idx_ordini_data
+            tableName: ordini
+            columns:
+              - column:
+                  name: data_ordine
+        - createIndex:
+            indexName: idx_ordini_fornitore
+            tableName: ordini
+            columns:
+              - column:
+                  name: fornitore_id
+      rollback:
+        - dropIndex:
+            indexName: idx_ordini_stato
+            tableName: ordini
+        - dropIndex:
+            indexName: idx_ordini_data
+            tableName: ordini
+        - dropIndex:
+            indexName: idx_ordini_fornitore
+            tableName: ordini
+
+  - changeSet:
+      id: 002-add-attivita-indexes
+      author: pw-team
+      changes:
+        - createIndex:
+            indexName: idx_attivita_timestamp
+            tableName: attivita
+            columns:
+              - column:
+                  name: timestamp
+      rollback:
+        - dropIndex:
+            indexName: idx_attivita_timestamp
+            tableName: attivita
+
+  - changeSet:
+      id: 002-add-sco-dettaglio-sto-indexes
+      author: pw-team
+      changes:
+        - createIndex:
+            indexName: idx_sco_contatore
+            tableName: sco_dettaglio_sto
+            columns:
+              - column:
+                  name: contatore
+        - createIndex:
+            indexName: idx_sco_dataora
+            tableName: sco_dettaglio_sto
+            columns:
+              - column:
+                  name: dataora
+        - createIndex:
+            indexName: idx_sco_codarticolo
+            tableName: sco_dettaglio_sto
+            columns:
+              - column:
+                  name: codarticolo
+      rollback:
+        - dropIndex:
+            indexName: idx_sco_contatore
+            tableName: sco_dettaglio_sto
+        - dropIndex:
+            indexName: idx_sco_dataora
+            tableName: sco_dettaglio_sto
+        - dropIndex:
+            indexName: idx_sco_codarticolo
+            tableName: sco_dettaglio_sto

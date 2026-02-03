@@ -1,0 +1,706 @@
+databaseChangeLog:
+  - changeSet:
+      id: 001-create-fornitori-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: fornitori
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: partita_iva
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: email
+                  type: varchar(255)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: telefono
+                  type: varchar(50)
+              - column:
+                  name: indirizzo
+                  type: varchar(500)
+              - column:
+                  name: citta
+                  type: varchar(100)
+              - column:
+                  name: cap
+                  type: varchar(10)
+              - column:
+                  name: paese
+                  type: varchar(100)
+              - column:
+                  name: created_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: updated_at
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+      rollback:
+        - dropTable:
+            tableName: fornitori
+
+  - changeSet:
+      id: 001-create-articoli-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: articoli
+            columns:
+              - column:
+                  name: codice
+                  type: varchar(50)
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: descrizione
+                  type: varchar(100)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+                  remarks: 'descrizione completa'
+              - column:
+                  name: ean
+                  type: varchar(13)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prezzodilistino
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: gruppo
+                  type: varchar(15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stato
+                  type: varchar(2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lp1
+                  type: char(3)
+              - column:
+                  name: lp2
+                  type: char(3)
+              - column:
+                  name: lp3
+                  type: char(3)
+              - column:
+                  name: lp4
+                  type: char(3)
+              - column:
+                  name: lp5
+                  type: char(3)
+                  defaultValue: ''
+              - column:
+                  name: lineaprod
+                  type: varchar(100)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: stagione
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: linkimmagine
+                  type: varchar(200)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: bidone
+                  type: varchar(15)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scodescri
+                  type: varchar(15)
+                  constraints:
+                    nullable: false
+                  remarks: 'descrizione per scontrino'
+              - column:
+                  name: tipo
+                  type: char(2)
+                  constraints:
+                    nullable: false
+                  remarks: 'tipo di gestione: fiscale, no giacenza, solo quantità, ecc'
+              - column:
+                  name: iva
+                  type: char(4)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: codfornitore
+                  type: varchar(45)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: peso
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: note
+                  type: varchar(250)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ubicazione
+                  type: varchar(45)
+                  constraints:
+                    nullable: false
+                  remarks: 'ubicazione fisica articolo: scaffale, magazzino, codifiche archiviazione'
+              - column:
+                  name: datainserimento
+                  type: timestamp
+              - column:
+                  name: dataritiro
+                  type: timestamp
+              - column:
+                  name: scortaminima
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: codpadre
+                  type: varchar(50)
+              - column:
+                  name: qtafiglio
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+                  remarks: 'quantità di questo articolo che corrisponde a un padre'
+              - column:
+                  name: codaccessori
+                  type: varchar(45)
+                  constraints:
+                    nullable: false
+                  remarks: 'chiave con tabella accessori per collegare un articolo con i relativi accessori'
+              - column:
+                  name: grcassa
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+                  remarks: 'reparto misuratore fiscale'
+              - column:
+                  name: ordinabile
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: datascad
+                  type: timestamp
+              - column:
+                  name: cod_iniziale
+                  type: varchar(30)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: var1
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: var2
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: var3
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: var4
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: cursoremod
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: gestgiacenza
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: codice2
+                  type: varchar(50)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: confezione
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: g_cliente
+                  type: varchar(20)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: progre
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dataultimamodifica
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: online_relevant
+                  type: smallint
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: articoli
+
+  - changeSet:
+      id: 001-create-gerarchie-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: gerarchie
+            columns:
+              - column:
+                  name: lp1
+                  type: char(3)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lp2
+                  type: char(3)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lp3
+                  type: char(3)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lp4
+                  type: char(3)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: lp5
+                  type: char(3)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descri1
+                  type: varchar(100)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descri2
+                  type: varchar(250)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: g_cliente
+                  type: varchar(20)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: progre
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dataultimamodifica
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: gerarchie
+
+  - changeSet:
+      id: 001-create-sco-dettaglio-sto-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: sco_dettaglio_sto
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: contatore
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+                  remarks: 'chiave con testata'
+              - column:
+                  name: numero
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+                  remarks: 'attribuito da programma'
+              - column:
+                  name: dataora
+                  type: timestamp
+                  constraints:
+                    nullable: false
+                  remarks: 'attribuita da programma'
+              - column:
+                  name: codnegozio
+                  type: varchar(10)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: codpostazione
+                  type: varchar(5)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: riga
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+                  remarks: 'numero riga di scontrino, attribuito da programma'
+              - column:
+                  name: codarticolo
+                  type: varchar(50)
+              - column:
+                  name: ean
+                  type: varchar(20)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descri_articolo
+                  type: varchar(100)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: quantita
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: scontoperc
+                  type: varchar(15)
+                  defaultValue: '0'
+                  constraints:
+                    nullable: false
+                  remarks: 'sconto in percentuale sulla riga'
+              - column:
+                  name: scontoimp
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'sconto in importo sulla riga'
+              - column:
+                  name: prezzolistino
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'prezzo da listino - dato riportato da tabella articoli'
+              - column:
+                  name: prezzomodificato
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'prezzo modificato da operatore'
+              - column:
+                  name: importo
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: '((prezzomodif) * quantita) - scontiriga: è il totale di riga che si vede in griglia scontrino'
+              - column:
+                  name: iva
+                  type: varchar(10)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: tipo_mov
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+                  remarks: 'venduto (-) o reso (+)'
+              - column:
+                  name: scontoperctestata
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'sconto percentuale derivante da quello su totale - dato riportato da testata'
+              - column:
+                  name: scontoimptestata
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'sconto in importo derivante da quello su totale - dato calcolato'
+              - column:
+                  name: scontocalc
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'somma in importo di tutti gli sconti che competono a questa riga'
+              - column:
+                  name: imposta
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'dato calcolato - serve per fatture e pno'
+              - column:
+                  name: imponibile
+                  type: varchar(15)
+                  defaultValue: '0,00'
+                  constraints:
+                    nullable: false
+                  remarks: 'dato calcolato - serve per fatture e pno'
+              - column:
+                  name: codvenditore
+                  type: varchar(45)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+                  remarks: 'persona che si occupa delle vendite, può essere diverso dal cassiere'
+              - column:
+                  name: old_codarticolo
+                  type: varchar(50)
+              - column:
+                  name: old_descri_art
+                  type: varchar(100)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+                  remarks: 'descrizione articolo prima di modifica'
+              - column:
+                  name: modificato
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: annullato
+                  type: char(1)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: contatoreordcli
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: voucher
+                  type: varchar(45)
+                  defaultValue: ''
+                  constraints:
+                    nullable: false
+              - column:
+                  name: inviatoalserverone
+                  type: char(1)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: dataultimamodifica
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: sco_dettaglio_sto
+
+  - changeSet:
+      id: 001-create-ordini-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: ordini
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: numero_ordine
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: stato
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: totale
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_ordine
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+              - column:
+                  name: fornitore_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ordini_fornitore
+                    references: fornitori(id)
+                    deleteCascade: false
+      rollback:
+        - dropTable:
+            tableName: ordini
+
+  - changeSet:
+      id: 001-create-ordini-items-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: ordini_items
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: ordine_id
+                  type: bigint
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ordini_items_ordine
+                    references: ordini(id)
+                    deleteCascade: true
+              - column:
+                  name: codice_articolo
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_ordini_items_articolo
+                    references: articoli(codice)
+                    deleteCascade: false
+              - column:
+                  name: quantita
+                  type: integer
+                  constraints:
+                    nullable: false
+              - column:
+                  name: prezzo_unitario
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: subtotale
+                  type: decimal(10,2)
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: ordini_items
+
+  - changeSet:
+      id: 001-create-attivita-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: attivita
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: tipo
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+              - column:
+                  name: descrizione
+                  type: text
+              - column:
+                  name: timestamp
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+      rollback:
+        - dropTable:
+            tableName: attivita

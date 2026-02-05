@@ -134,6 +134,10 @@
                             <modelPackage>org.example.pw_be.model.dto</modelPackage>
                             <invokerPackage>org.example.pw_be.invoker</invokerPackage>
                             <output>${project.build.directory}/generated-sources/openapi</output>
+
+                            <!-- Aggiungi suffisso "Dto" ai model generati -->
+                            <modelNameSuffix>Dto</modelNameSuffix>
+
                             <configOptions>
                                 <delegatePattern>true</delegatePattern>
                                 <useSpringBoot3>true</useSpringBoot3>

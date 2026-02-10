@@ -1,1 +1,1 @@
-# stockify
+# Stock4Store

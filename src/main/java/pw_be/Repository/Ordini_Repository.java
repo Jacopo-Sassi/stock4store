@@ -1,7 +1,7 @@
 package pw_be.Repository;
 
+import org.example.pw_be.model.dto.StatoOrdineDto;
 import pw_be.Model.Ordine;
-import pw_be.model.dto.StatoOrdineDto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

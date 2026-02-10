@@ -16,6 +16,7 @@ public interface Fornitori_Repository extends JpaRepository<Fornitore, Long> {
 
     Optional<Fornitore> findByPartitaIva(String partitaIva);
 
+    // Usa QUESTO metodo per la ricerca (è il più completo)
     @Query("SELECT f FROM Fornitore f WHERE " +
             "LOWER(f.nome) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
             "LOWER(f.email) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
@@ -23,4 +24,7 @@ public interface Fornitori_Repository extends JpaRepository<Fornitore, Long> {
     List<Fornitore> searchFornitori(@Param("query") String query);
 
     List<Fornitore> findByCitta(String citta);
+
+    // Metodo alternativo se vuoi cercare solo per nome
+    List<Fornitore> findByNomeContainingIgnoreCase(String nome);
 }

@@ -1,59 +1,63 @@
-
 package pw_be.Service;
 
+import pw_be.Exceptions.ResourceNotFoundException;
+import pw_be.Mapper.Fornitori_Mapper;
+import org.example.pw_be.model.dto.FornitoreDto;
+import org.example.pw_be.model.dto.FornitoreRequestDto;
 import pw_be.Model.Fornitore;
-import pw_be.Repository.Fornitori_Repository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import pw_be.Repository.Fornitori_Repository;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
 public class Fornitore_Service {
 
-    @Autowired
-    private Fornitori_Repository fornitoriRepository;
+    private final Fornitori_Repository fornitoreRepository;
+    private final Fornitori_Mapper fornitoreMapper;
 
-    public List<Fornitore> findAll() {
-        return fornitoriRepository.findAll();
+    public Fornitore_Service(Fornitori_Repository fornitoreRepository,
+                             Fornitori_Mapper fornitoreMapper) {
+        this.fornitoreRepository = fornitoreRepository;
+        this.fornitoreMapper = fornitoreMapper;
     }
 
-    public Optional<Fornitore> findById(Long id) {
-        return fornitoriRepository.findById(id);
+    public FornitoreDto createFornitore(FornitoreRequestDto requestDto) {
+        Fornitore fornitore = fornitoreMapper.toEntity(requestDto);
+        Fornitore savedFornitore = fornitoreRepository.save(fornitore);
+        return fornitoreMapper.toDto(savedFornitore);
     }
 
-    public Optional<Fornitore> findByEmail(String email) {
-        return fornitoriRepository.findByEmail(email);
+    public FornitoreDto getFornitoreById(Long id) {
+        Fornitore fornitore = fornitoreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Fornitore non trovato con id: " + id));
+        return fornitoreMapper.toDto(fornitore);
     }
 
-    public Optional<Fornitore> findByPartitaIva(String partitaIva) {
-        return fornitoriRepository.findByPartitaIva(partitaIva);
+    public List<FornitoreDto> getAllFornitori() {
+        List<Fornitore> fornitori = fornitoreRepository.findAll();
+        return fornitori.stream()
+                .map(fornitoreMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Fornitore> searchFornitori(String query) {
-        return fornitoriRepository.searchFornitori(query);
+    public List<FornitoreDto> searchFornitori(String query) {
+        // Implementa la ricerca in base ai tuoi requisiti
+        List<Fornitore> fornitori = fornitoreRepository.findByNomeContainingIgnoreCase(query);
+        return fornitori.stream()
+                .map(fornitoreMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    public List<Fornitore> findByCitta(String citta) {
-        return fornitoriRepository.findByCitta(citta);
-    }
+    public FornitoreDto updateFornitore(Long id, FornitoreRequestDto requestDto) {
+        Fornitore existingFornitore = fornitoreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Fornitore non trovato con id: " + id));
 
-    public Fornitore save(Fornitore fornitore) {
-        return fornitoriRepository.save(fornitore);
-    }
-
-    public void delete(Long id) {
-        fornitoriRepository.deleteById(id);
-    }
-
-    public boolean exists(Long id) {
-        return fornitoriRepository.existsById(id);
-    }
-
-    public long count() {
-        return fornitoriRepository.count();
+        fornitoreMapper.updateEntityFromDto(requestDto, existingFornitore);
+        Fornitore updatedFornitore = fornitoreRepository.save(existingFornitore);
+        return fornitoreMapper.toDto(updatedFornitore);
     }
 }

@@ -1,8 +1,9 @@
 package pw_be.Controller;
 
-import pw_be.api.AuthenticationApi;
-import pw_be.model.dto.LoginRequestDto;
-import pw_be.model.dto.LoginResponseDto;
+
+import org.example.pw_be.api.AuthenticationApi;
+import org.example.pw_be.model.dto.LoginRequestDto;
+import org.example.pw_be.model.dto.LoginResponseDto;
 import org.springframework.http.ResponseEntity;
 
 public class Authentication_Controller implements AuthenticationApi {

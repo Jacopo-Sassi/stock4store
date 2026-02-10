@@ -1,8 +1,8 @@
 package pw_be.Mapper;
 
-import org.example.pw_be.model.dto.ArticoloDto;
-import org.example.pw_be.model.dto.ArticoloRequestDto;
-import pw_be.Model.Articolo;
+import org.example.pw_be.model.dto.FornitoreDto;
+import org.example.pw_be.model.dto.FornitoreRequestDto;
+import pw_be.Model.Fornitore;
 
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -16,29 +16,22 @@ import java.time.ZoneId;
 import java.util.List;
 
 @Mapper(componentModel = "spring")
-public interface Articoli_Mapper {
+public interface Fornitori_Mapper {
 
     // Entity → DTO (per risposta API)
-    ArticoloDto toDto(Articolo entity);
+    FornitoreDto toDto(Fornitore entity);
 
     // RequestDTO → Entity (per creazione)
-    @Mapping(target = "codice", ignore = true)
-    @Mapping(target = "datainserimento", expression = "java(java.time.LocalDateTime.now())")
-    @Mapping(target = "descrizione", defaultValue = "")
-    @Mapping(target = "ean", defaultValue = "")
-    @Mapping(target = "lp5", defaultValue = "")
-    @Mapping(target = "lineaprod", defaultValue = "")
-    @Mapping(target = "note", defaultValue = "")
-    Articolo toEntity(ArticoloRequestDto requestDto);
+    @Mapping(target = "id", ignore = true)
+    Fornitore toEntity(FornitoreRequestDto requestDto);
 
     // Update Entity da RequestDTO (per aggiornamento)
-    @Mapping(target = "codice", ignore = true)
-    @Mapping(target = "datainserimento", ignore = true)
+    @Mapping(target = "id", ignore = true)
     @BeanMapping(nullValuePropertyMappingStrategy = NullValuePropertyMappingStrategy.IGNORE)
-    void updateEntityFromDto(ArticoloRequestDto requestDto, @MappingTarget Articolo entity);
+    void updateEntityFromDto(FornitoreRequestDto requestDto, @MappingTarget Fornitore entity);
 
     // List mapping
-    List<ArticoloDto> toDtoList(List<Articolo> entities);
+    List<FornitoreDto> toDtoList(List<Fornitore> entities);
 
     // Conversione LocalDateTime → OffsetDateTime
     default OffsetDateTime map(LocalDateTime localDateTime) {

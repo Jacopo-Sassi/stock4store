@@ -1,7 +1,8 @@
 package pw_be.Controller;
 
-import pw_be.api.ScontriniApi;
-import pw_be.model.dto.ScontrinoDettaglioDto;
+
+import org.example.pw_be.api.ScontriniApi;
+import org.example.pw_be.model.dto.ScontrinoDettaglioDto;
 import org.springframework.http.ResponseEntity;
 
 import java.time.OffsetDateTime;

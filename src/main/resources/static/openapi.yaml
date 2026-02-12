@@ -34,7 +34,7 @@ paths:
       tags:
         - Authentication
       summary: Login utente
-      description: Autentica un utente tramite email e password
+      description: Autentica un utente tramite nome utente e password (SHA-256)
       operationId: login
       requestBody:
         required: true
@@ -51,6 +51,108 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           description: Credenziali non valide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verifica token
+      description: Verifica la validità del token JWT
+      operationId: verifyToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token valido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  utente:
+                    $ref: '#/components/schemas/UtenteResponse'
+        '401':
+          description: Token non valido o scaduto
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout utente
+      description: Effettua il logout e invalida il token
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout effettuato con successo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout effettuato con successo"
+        '401':
+          description: Token non valido
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Profilo utente corrente
+      description: Recupera le informazioni dell'utente autenticato
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Informazioni utente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtenteResponse'
+        '401':
+          description: Non autenticato
+
+  /api/auth/change-password:
+    put:
+      tags:
+        - Authentication
+      summary: Cambia password
+      description: Modifica la password dell'utente autenticato
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password modificata con successo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password modificata con successo"
+        '400':
+          description: Password attuale non corretta
+        '401':
+          description: Non autenticato
 
   /api/dashboard:
     get:
@@ -59,6 +161,8 @@ paths:
       summary: Recupera dati dashboard
       description: Ottiene articoli, ordini e attività per la dashboard
       operationId: getDashboard
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Dati dashboard recuperati con successo
@@ -74,6 +178,8 @@ paths:
       summary: Lista tutti gli articoli
       description: Recupera l'elenco completo degli articoli con filtri opzionali
       operationId: getArticoli
+      security:
+        - bearerAuth: []
       parameters:
         - name: gruppo
           in: query
@@ -106,6 +212,8 @@ paths:
       summary: Crea nuovo articolo
       description: Aggiunge un nuovo articolo all'inventario
       operationId: createArticolo
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -126,6 +234,8 @@ paths:
         - Articoli
       summary: Recupera articolo per codice
       operationId: getArticoloByCodice
+      security:
+        - bearerAuth: []
       parameters:
         - name: codice
           in: path
@@ -147,6 +257,8 @@ paths:
         - Articoli
       summary: Aggiorna articolo
       operationId: updateArticolo
+      security:
+        - bearerAuth: []
       parameters:
         - name: codice
           in: path
@@ -172,6 +284,8 @@ paths:
         - Articoli
       summary: Elimina articolo
       operationId: deleteArticolo
+      security:
+        - bearerAuth: []
       parameters:
         - name: codice
           in: path
@@ -186,9 +300,11 @@ paths:
     get:
       tags:
         - Articoli
-      summary: Verifica stock articoli
-      description: Controlla la disponibilità degli articoli in base alla quantità richiesta
+      summary: Verifica stock articolo
+      description: Controlla la disponibilità di un articolo
       operationId: checkStock
+      security:
+        - bearerAuth: []
       parameters:
         - name: codice
           in: path
@@ -207,6 +323,8 @@ paths:
                     type: string
                   quantitaDisponibile:
                     type: integer
+        '404':
+          description: Articolo non trovato
 
   /api/articoli/search:
     post:
@@ -215,6 +333,8 @@ paths:
       summary: Ricerca articoli
       description: Cerca articoli tramite searchbar e filtri
       operationId: searchArticoli
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -237,6 +357,8 @@ paths:
         - Articoli
       summary: Cerca articolo per EAN
       operationId: getArticoloByEan
+      security:
+        - bearerAuth: []
       parameters:
         - name: ean
           in: path
@@ -257,6 +379,8 @@ paths:
         - Ordini
       summary: Lista tutti gli ordini
       operationId: getOrdini
+      security:
+        - bearerAuth: []
       parameters:
         - name: stato
           in: query
@@ -278,6 +402,8 @@ paths:
         - Ordini
       summary: Crea nuovo ordine
       operationId: createOrdine
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -298,6 +424,8 @@ paths:
         - Ordini
       summary: Recupera ordine per ID
       operationId: getOrdineById
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -320,6 +448,8 @@ paths:
       summary: Avanza stato ordine
       description: Cambia lo stato dell'ordine (ENUM)
       operationId: avanzaOrdine
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -350,6 +480,8 @@ paths:
         - Fornitori
       summary: Lista tutti i fornitori
       operationId: getFornitori
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista fornitori
@@ -365,6 +497,8 @@ paths:
         - Fornitori
       summary: Crea nuovo fornitore
       operationId: createFornitore
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -385,6 +519,8 @@ paths:
         - Fornitori
       summary: Recupera fornitore per ID
       operationId: getFornitoreById
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -405,6 +541,8 @@ paths:
         - Fornitori
       summary: Aggiorna fornitore
       operationId: updateFornitore
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -432,6 +570,8 @@ paths:
         - Fornitori
       summary: Cerca fornitori
       operationId: searchFornitori
+      security:
+        - bearerAuth: []
       parameters:
         - name: query
           in: query
@@ -454,6 +594,8 @@ paths:
         - Gerarchie
       summary: Lista gerarchie prodotti
       operationId: getGerarchie
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Lista gerarchie
@@ -469,6 +611,8 @@ paths:
         - Gerarchie
       summary: Crea nuova gerarchia
       operationId: createGerarchia
+      security:
+        - bearerAuth: []
       requestBody:
         required: true
         content:
@@ -489,6 +633,8 @@ paths:
         - Scontrini
       summary: Lista dettagli scontrini
       operationId: getScontrini
+      security:
+        - bearerAuth: []
       parameters:
         - name: dataInizio
           in: query
@@ -517,6 +663,8 @@ paths:
       summary: Analytics articoli
       description: Recupera dati analytics per gli articoli
       operationId: getAnalyticsArticoli
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Dati analytics
@@ -532,6 +680,8 @@ paths:
       summary: AI Analytics
       description: Frontend chiama BE che chiama servizio Python per analytics AI
       operationId: getAIAnalytics
+      security:
+        - bearerAuth: []
       responses:
         '200':
           description: Dati AI analytics
@@ -541,19 +691,29 @@ paths:
                 $ref: '#/components/schemas/AIAnalyticsResponse'
 
 components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT ottenuto dal login
+
   schemas:
     LoginRequest:
       type: object
       required:
-        - email
+        - nomeUtente
         - password
       properties:
-        email:
+        nomeUtente:
           type: string
-          format: email
+          example: "admin"
+          description: Nome utente
         password:
           type: string
           format: password
+          example: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
+          description: Password hashata in SHA-256 (dal frontend)
 
     LoginResponse:
       type: object
@@ -561,11 +721,66 @@ components:
         token:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-        userId:
+          description: Token JWT per autenticazione
+        utente:
+          $ref: '#/components/schemas/UtenteResponse'
+
+    UtenteResponse:
+      type: object
+      properties:
+        id:
           type: integer
           format: int64
+          example: 1
+        nomeUtente:
+          type: string
+          example: "admin"
         email:
           type: string
+          format: email
+          example: "admin@gioielleria.it"
+        ruolo:
+          type: string
+          enum: [ADMIN, STAFF]
+          example: "ADMIN"
+        attivo:
+          type: boolean
+          example: true
+        dataCreazione:
+          type: string
+          format: date-time
+        ultimoAccesso:
+          type: string
+          format: date-time
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - passwordAttuale
+        - nuovaPassword
+      properties:
+        passwordAttuale:
+          type: string
+          format: password
+          description: Password attuale hashata in SHA-256
+        nuovaPassword:
+          type: string
+          format: password
+          description: Nuova password hashata in SHA-256
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: "Credenziali non valide"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-02-12T11:27:00.000000"
 
     DashboardResponse:
       type: object

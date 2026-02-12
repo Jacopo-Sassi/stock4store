@@ -581,6 +581,107 @@ databaseChangeLog:
             tableName: sco_dettaglio_sto
 
   - changeSet:
+      id: 004-create-utenti-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: utenti
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: nome_utente
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: password
+                  type: varchar(64)
+                  constraints:
+                    nullable: false
+                  remarks: 'Password hashata con SHA-256 (64 caratteri hex)'
+              - column:
+                  name: email
+                  type: varchar(100)
+                  constraints:
+                    nullable: false
+                    unique: true
+              - column:
+                  name: ruolo
+                  type: varchar(20)
+                  constraints:
+                    nullable: false
+                  remarks: 'Ruoli: ADMIN, STAFF'
+              - column:
+                  name: attivo
+                  type: boolean
+                  defaultValueBoolean: true
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_creazione
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+              - column:
+                  name: ultimo_accesso
+                  type: timestamp
+      rollback:
+        - dropTable:
+            tableName: utenti
+
+  - changeSet:
+      id: 004-insert-utenti-sample-data
+      author: pw-team
+      changes:
+        - insert:
+            tableName: utenti
+            columns:
+              - column:
+                  name: nome_utente
+                  value: admin
+              - column:
+                  name: password
+                  value: 240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9
+              - column:
+                  name: email
+                  value: admin@gioielleria.it
+              - column:
+                  name: ruolo
+                  value: ADMIN
+              - column:
+                  name: attivo
+                  valueBoolean: true
+        - insert:
+            tableName: utenti
+            columns:
+              - column:
+                  name: nome_utente
+                  value: staff
+              - column:
+                  name: password
+                  value: 10176e7b7b24d317acfcf8d2064cfd2f24e154f7b5a96603077d5ef813d6a6b6
+              - column:
+                  name: email
+                  value: staff@gioielleria.it
+              - column:
+                  name: ruolo
+                  value: STAFF
+              - column:
+                  name: attivo
+                  valueBoolean: true
+      rollback:
+        - delete:
+            tableName: utenti
+
+  - changeSet:
       id: 001-create-ordini-table
       author: pw-team
       changes:

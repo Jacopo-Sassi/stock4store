@@ -577,6 +577,73 @@ databaseChangeLog:
       rollback:
         - delete:
             tableName: ordini
+  - changeSet:
+      id: 003-insert-articolo-stock-sample-data
+      author: pw-team
+      changes:
+        - insert:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: codice_articolo
+                  value: ANL001
+              - column:
+                  name: quantita_stock
+                  value: 5
+              - column:
+                  name: data_aggiornamento
+                  valueDate: CURRENT_TIMESTAMP
+        - insert:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: codice_articolo
+                  value: COL002
+              - column:
+                  name: quantita_stock
+                  value: 12
+              - column:
+                  name: data_aggiornamento
+                  valueDate: CURRENT_TIMESTAMP
+        - insert:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: codice_articolo
+                  value: ORE003
+              - column:
+                  name: quantita_stock
+                  value: 8
+              - column:
+                  name: data_aggiornamento
+                  valueDate: CURRENT_TIMESTAMP
+        - insert:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: codice_articolo
+                  value: BRA004
+              - column:
+                  name: quantita_stock
+                  value: 15
+              - column:
+                  name: data_aggiornamento
+                  valueDate: CURRENT_TIMESTAMP
+        - insert:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: codice_articolo
+                  value: FED005
+              - column:
+                  name: quantita_stock
+                  value: 25
+              - column:
+                  name: data_aggiornamento
+                  valueDate: CURRENT_TIMESTAMP
+      rollback:
+        - delete:
+            tableName: articolo_stock
 
   - changeSet:
       id: 003-insert-ordini-items-sample-data

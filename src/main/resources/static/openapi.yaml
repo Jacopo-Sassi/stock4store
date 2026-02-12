@@ -182,6 +182,32 @@ paths:
         '204':
           description: Articolo eliminato con successo
 
+  /api/articoli/{codice}/stock:
+    get:
+      tags:
+        - Articoli
+      summary: Verifica stock articoli
+      description: Controlla la disponibilità degli articoli in base alla quantità richiesta
+      operationId: checkStock
+      parameters:
+        - name: codice
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Disponibilità stock verificata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codice:
+                    type: string
+                  quantitaDisponibile:
+                    type: integer
+
   /api/articoli/search:
     post:
       tags:

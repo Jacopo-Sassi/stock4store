@@ -3,6 +3,7 @@ package pw_be.Controller;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.web.server.ResponseStatusException;
 import pw_be.Exceptions.ErrorResponse;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -26,6 +27,17 @@ public class GlobalExceptionsHandler {
                 LocalDateTime.now()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    // ✨ AGGIUNGI QUESTO HANDLER PER ResponseStatusException
+    @ExceptionHandler(ResponseStatusException.class)
+    public ResponseEntity<ErrorResponse> handleResponseStatusException(ResponseStatusException ex) {
+        ErrorResponse error = new ErrorResponse(
+                ex.getStatusCode().value(),
+                ex.getReason() != null ? ex.getReason() : ex.getMessage(),
+                LocalDateTime.now()
+        );
+        return ResponseEntity.status(ex.getStatusCode()).body(error);
     }
 
     // Gestione errori di validazione (@Valid)
@@ -88,4 +100,3 @@ public class GlobalExceptionsHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 }
-

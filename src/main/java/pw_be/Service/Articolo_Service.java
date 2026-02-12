@@ -1,5 +1,7 @@
 package pw_be.Service;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import pw_be.Model.Articolo;
 import pw_be.Repository.Articoli_Repository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -80,4 +82,17 @@ public class Articolo_Service {
             return articoliRepository.findAll();
         }
     }
+
+    public int getQuantitaDisponibile(String codice) {
+        articoliRepository.findById(codice)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Articolo con codice " + codice + " non trovato"
+                ));
+
+        Integer quantita = articoliRepository.getQuantitaDisponibile(codice);
+        return quantita != null ? quantita : 0;
+    }
+
+
 }

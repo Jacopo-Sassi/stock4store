@@ -59,4 +59,7 @@ public interface Articoli_Repository extends JpaRepository<Articolo, String> {
     List<Articolo> findByPrezzodilistinoBetween(BigDecimal min, BigDecimal max);
 
     List<Articolo> findByScortaminimaLessThan(Integer quantita);
+
+    @Query(value = "SELECT COALESCE(quantita_stock, 0) FROM articolo_stock WHERE codice_articolo = :codice", nativeQuery = true)
+    Integer getQuantitaDisponibile(@Param("codice") String codice);
 }

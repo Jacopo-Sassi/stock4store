@@ -3,6 +3,7 @@ package pw_be.Controller;
 import org.example.pw_be.api.ArticoliApi;
 import org.example.pw_be.model.dto.ArticoloDto;
 import org.example.pw_be.model.dto.ArticoloRequestDto;
+import org.example.pw_be.model.dto.CheckStock200ResponseDto;
 import org.example.pw_be.model.dto.SearchRequestDto;
 import pw_be.Mapper.Articoli_Mapper;
 import pw_be.Model.Articolo;
@@ -29,6 +30,16 @@ public class Articoli_Controller implements ArticoliApi {
         this.articoliRepository = articoliRepository;
         this.articoliMapper = articoliMapper;
         this.articoloService = articoloService;
+    }
+
+
+    @Override
+    public ResponseEntity<CheckStock200ResponseDto> _checkStock(String codice) {
+        int stock = articoloService.getQuantitaDisponibile(codice);
+        CheckStock200ResponseDto response = new CheckStock200ResponseDto();
+        response.setCodice(codice);
+        response.setQuantitaDisponibile(stock);
+        return ResponseEntity.ok(response);
     }
 
     @Override

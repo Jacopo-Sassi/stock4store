@@ -676,6 +676,43 @@ databaseChangeLog:
             tableName: ordini_items
 
   - changeSet:
+      id: 001-create-articolo-stock-table
+      author: pw-team
+      changes:
+        - createTable:
+            tableName: articolo_stock
+            columns:
+              - column:
+                  name: id
+                  type: bigserial
+                  autoIncrement: true
+                  constraints:
+                    primaryKey: true
+                    nullable: false
+              - column:
+                  name: codice_articolo
+                  type: varchar(50)
+                  constraints:
+                    nullable: false
+                    foreignKeyName: fk_articolo_stock_articolo
+                    references: articoli(codice)
+              - column:
+                  name: quantita_stock
+                  type: integer
+                  defaultValue: 0
+                  constraints:
+                    nullable: false
+              - column:
+                  name: data_aggiornamento
+                  type: timestamp
+                  defaultValueComputed: CURRENT_TIMESTAMP
+                  constraints:
+                    nullable: false
+      rollback:
+        - dropTable:
+            tableName: articolo_stock
+
+  - changeSet:
       id: 001-create-attivita-table
       author: pw-team
       changes:

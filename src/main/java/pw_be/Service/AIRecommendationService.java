@@ -12,7 +12,7 @@ import java.util.Map;
 @Service
 public class AIRecommendationService {
 
-    @Value("${ai.service.url:http://localhost:5000}")
+    @Value("${ai.service.url:http://ai-service:5000}")
     private String aiServiceUrl;
 
     private final RestTemplate restTemplate;

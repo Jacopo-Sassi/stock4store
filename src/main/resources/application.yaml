@@ -1,12 +1,11 @@
-
 spring:
     application:
         name: PW_BE
 
     datasource:
-        url: jdbc:postgresql://localhost:5432/postgres-db-PW
-        username: admin
-        password: admin123
+        url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/myappdb}
+        username: ${SPRING_DATASOURCE_USERNAME:admin}
+        password: ${SPRING_DATASOURCE_PASSWORD:admin123}
         driver-class-name: org.postgresql.Driver
 
     jpa:
@@ -33,3 +32,8 @@ logging:
     level:
         org.hibernate.SQL: DEBUG
         org.hibernate.type.descriptor.sql.BasicBinder: TRACE
+
+# Configurazione AI Service
+ai:
+    service:
+        url: ${AI_SERVICE_URL:http://localhost:5000}

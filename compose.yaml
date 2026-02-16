@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   postgres:
     image: postgres:16-alpine
@@ -13,12 +15,56 @@ services:
       - ./init-scripts:/docker-entrypoint-initdb.d
     networks:
       - app-network
-    restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U admin -d myappdb"]
+      test: [ "CMD-SHELL", "pg_isready -U admin -d myappdb" ]  # ← E qui
       interval: 10s
       timeout: 5s
       retries: 5
+
+  ai-service:
+    build:
+      context: ./python-ai
+      dockerfile: Dockerfile
+    container_name: pw_ai_service
+    environment:
+      - FLASK_ENV=production
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_NAME=myappdb
+      - DB_USER=admin
+      - DB_PASSWORD=admin123
+      - MODEL_PATH=/app/models/mistral-7b-instruct-v0.2.Q4_K_M.gguf
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./python-ai/models:/app/models
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: pw_backend
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/myappdb
+      - SPRING_DATASOURCE_USERNAME=admin
+      - SPRING_DATASOURCE_PASSWORD=admin123
+      - AI_SERVICE_URL=http://ai-service:5000
+    ports:
+      - "8080:8080"
+    networks:
+      - app-network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      ai-service:
+        condition: service_started
 
 networks:
   app-network:

@@ -87,6 +87,14 @@
             <version>2.2.20</version>
         </dependency>
 
+        
+
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-webflux</artifactId>
+        </dependency>
+
+
         <!-- MapStruct -->
         <dependency>
             <groupId>org.mapstruct</groupId>

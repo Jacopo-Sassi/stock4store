@@ -1,35 +1,37 @@
 package pw_be.Controller;
 
+import org.example.pw_be.api.AiAnalyticsApi;
+import org.example.pw_be.model.dto.AIAnalyticsResponseDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RestController;
 import pw_be.Service.AIRecommendationService;
 
 @RestController
-@RequestMapping("/api/ai")
-@CrossOrigin(origins = "*")
-public class AIRecommendationController {
+public class AIRecommendationController implements AiAnalyticsApi {
 
     @Autowired
     private AIRecommendationService aiRecommendationService;
 
-    @GetMapping("/health")
-    public ResponseEntity<?> healthCheck() {
+    @Override
+    public ResponseEntity<AIAnalyticsResponseDto> _getAIAnalytics() {
         try {
-            return ResponseEntity.ok(aiRecommendationService.healthCheck());
-        } catch (Exception e) {
-            return ResponseEntity.status(503)
-                    .body("AI service unavailable: " + e.getMessage());
-        }
-    }
+            System.out.println("📞 Richiesta AI Analytics ricevuta...");
 
-    @GetMapping("/recommendations")
-    public ResponseEntity<?> getRecommendations() {
-        try {
-            return ResponseEntity.ok(aiRecommendationService.getRecommendations());
+            AIAnalyticsResponseDto response = aiRecommendationService.getAIAnalytics();
+
+            System.out.println("✅ Analytics generato con successo");
+            return ResponseEntity.ok(response);
+
         } catch (Exception e) {
-            return ResponseEntity.status(500)
-                    .body("Error: " + e.getMessage());
+            System.err.println("❌ Errore AI Analytics: " + e.getMessage());
+            e.printStackTrace();
+
+            // Ritorna un DTO vuoto o di errore
+            AIAnalyticsResponseDto errorResponse = new AIAnalyticsResponseDto();
+            // Setta campi di errore se il DTO li ha
+
+            return ResponseEntity.status(500).body(errorResponse);
         }
     }
 }

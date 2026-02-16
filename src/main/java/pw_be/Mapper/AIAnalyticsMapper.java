@@ -1,10 +1,11 @@
 package pw_be.Mapper;
 
 import org.example.pw_be.model.dto.AIAnalyticsResponseDto;
+import org.example.pw_be.model.dto.ArticoloAIDtoDto;
+import org.example.pw_be.model.dto.PrevisioniDtoDto;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -15,7 +16,6 @@ public class AIAnalyticsMapper {
         AIAnalyticsResponseDto dto = new AIAnalyticsResponseDto();
 
         try {
-            // Estrai dati dalla risposta Python
             List<Map<String, Object>> products = (List<Map<String, Object>>) pythonResponse.get("products");
             Integer totalProducts = (Integer) pythonResponse.get("total_products_analyzed");
             String analysisDate = (String) pythonResponse.get("analysis_date");
@@ -41,7 +41,6 @@ public class AIAnalyticsMapper {
                 insights.append("\n").append(note);
             }
 
-            // Conta urgenze
             if (products != null && !products.isEmpty()) {
                 long critici = products.stream()
                         .filter(p -> "ALTA".equals(p.get("urgency")))
@@ -61,11 +60,11 @@ public class AIAnalyticsMapper {
 
             dto.setInsights(insights.toString());
 
-            // ========== RACCOMANDAZIONI (UNA COMPLETA PER PRODOTTO) ==========
-            List<String> raccomandazioniList = new ArrayList<>();
+            // ========== RACCOMANDAZIONI (Lista ArticoloAIDto) ==========
+            List<ArticoloAIDtoDto> raccomandazioni = new ArrayList<>();
 
             if (products != null && !products.isEmpty()) {
-                int counter = 1;
+                int[] counter = {1};
 
                 // Ordina per urgenza
                 products.stream()
@@ -78,179 +77,132 @@ public class AIAnalyticsMapper {
                             if ("MEDIA".equals(u2)) return 1;
                             return 0;
                         })
-                        .forEach(product -> {
-                            StringBuilder analisiProdotto = new StringBuilder();
+                        .forEach(p -> {
+                            ArticoloAIDtoDto a = new ArticoloAIDtoDto();
 
-                            // ========== HEADER ==========
-                            analisiProdotto.append("╔═══════════════════════════════════════════════════════════════════════════════╗\n");
-                            analisiProdotto.append("║  PRODOTTO #").append(counter).append("\n");
-                            analisiProdotto.append("╚═══════════════════════════════════════════════════════════════════════════════╝\n\n");
+                            a.setProductNumber(counter[0]++);
 
-                            // Icona urgenza
-                            String urgency = (String) product.get("urgency");
-                            String icon = "ALTA".equals(urgency) ? "🔴" :
+                            String urgency = (String) p.get("urgency");
+                            a.setUrgencyIcon("ALTA".equals(urgency) ? "🔴" :
                                     "MEDIA".equals(urgency) ? "🟡" :
-                                            "BASSA".equals(urgency) ? "🟢" : "⚪";
+                                            "BASSA".equals(urgency) ? "🟢" : "⚪");
 
-                            // Nome e categoria
-                            analisiProdotto.append(icon).append(" ")
-                                    .append(product.get("product_name"))
-                                    .append("\n");
-                            analisiProdotto.append("Categoria: ")
-                                    .append(product.get("category"))
-                                    .append(" | Codice: ")
-                                    .append(product.get("product_id"))
-                                    .append("\n\n");
+                            a.setProductName((String) p.get("product_name"));
+                            a.setProductId((String) p.get("product_id"));
+                            a.setCategory((String) p.get("category"));
+                            a.setCurrentStock((Integer) p.get("current_stock"));
+                            a.setTotalSold((Integer) p.get("total_sold"));
 
-                            // ========== DATI STOCK E VENDITE ==========
-                            analisiProdotto.append("📦 STOCK E VENDITE:\n");
-                            analisiProdotto.append("─".repeat(80)).append("\n");
-                            analisiProdotto.append("Stock attuale: ").append(product.get("current_stock")).append(" unità\n");
-                            analisiProdotto.append("Vendite totali: ").append(product.get("total_sold")).append(" unità\n");
-                            analisiProdotto.append("Velocità vendita: ").append(product.get("daily_sales_rate")).append(" unità/giorno\n");
-                            analisiProdotto.append("Giorni di copertura: ").append(String.format("%.1f", product.get("days_of_stock"))).append(" giorni\n");
-                            analisiProdotto.append("Prezzo unitario: €").append(String.format("%.2f", product.get("price"))).append("\n\n");
+                            Number salesRate = (Number) p.get("daily_sales_rate");
+                            a.setDailySalesRate(salesRate != null ? salesRate.doubleValue() : 0.0);
 
-                            // ========== ANALISI E SPIEGAZIONE ==========
-                            String explanation = (String) product.get("explanation");
-                            if (explanation != null && !explanation.isEmpty()) {
-                                analisiProdotto.append("🔍 ANALISI:\n");
-                                analisiProdotto.append("─".repeat(80)).append("\n");
-                                analisiProdotto.append(explanation).append("\n\n");
-                            }
+                            Number daysStock = (Number) p.get("days_of_stock");
+                            a.setDaysOfStock(daysStock != null ? daysStock.doubleValue() : 0.0);
 
-                            // ========== RACCOMANDAZIONE ==========
-                            Integer suggestedQty = (Integer) product.get("suggested_order_quantity");
-                            String stockStatus = (String) product.get("stock_status");
-                            String recommendation = (String) product.get("recommendation");
+                            Number price = (Number) p.get("price");
+                            a.setPrice(price != null ? price.doubleValue() : 0.0);
 
-                            analisiProdotto.append("💡 RACCOMANDAZIONE:\n");
-                            analisiProdotto.append("─".repeat(80)).append("\n");
+                            a.setAnalysis((String) p.get("explanation"));
+                            a.setAnalyzedWithAI((Boolean) p.getOrDefault("analyzed_with_ai", false));
+                            a.setRecommendation((String) p.get("recommendation"));
+                            a.setSuggestedOrderQuantity((Integer) p.get("suggested_order_quantity"));
+                            a.setStockStatus((String) p.get("stock_status"));
+                            a.setUrgency(urgency);
 
-                            if (recommendation != null && !recommendation.isEmpty()) {
-                                analisiProdotto.append(recommendation).append("\n");
-                            } else if (suggestedQty != null && suggestedQty > 0) {
-                                analisiProdotto.append("Ordina ").append(suggestedQty).append(" unità\n");
-                            } else {
-                                analisiProdotto.append("✅ Stock sufficiente - Non ordinare al momento\n");
-                            }
+                            // Previsioni finanziarie
+                            Integer qty = a.getSuggestedOrderQuantity();
+                            if (qty != null && qty > 0 && a.getPrice() != null && a.getPrice() > 0) {
+                                double inv = qty * a.getPrice();
+                                double rev = inv * 1.3;
+                                double prof = rev - inv;
 
-                            analisiProdotto.append("Status: ").append(stockStatus != null ? stockStatus : "N/A").append("\n");
-                            analisiProdotto.append("Urgenza: ").append(urgency).append("\n\n");
+                                a.setInvestimento(inv);
+                                a.setRevenueAtteso(rev);
+                                a.setProfittoStimato(prof);
+                                a.setRoiAtteso((prof / inv) * 100);
 
-                            // ========== PREVISIONI FINANZIARIE SPECIFICHE ==========
-                            if (suggestedQty != null && suggestedQty > 0) {
-                                Number price = (Number) product.get("price");
-                                Number totalRevenue = (Number) product.get("total_revenue");
-
-                                if (price != null) {
-                                    double investimento = suggestedQty * price.doubleValue();
-                                    double revenueAtteso = investimento * 1.3; // Margine 30%
-                                    double profitto = revenueAtteso - investimento;
-
-                                    analisiProdotto.append("💰 PREVISIONI FINANZIARIE:\n");
-                                    analisiProdotto.append("─".repeat(80)).append("\n");
-                                    analisiProdotto.append("Investimento necessario: €").append(String.format("%,.2f", investimento)).append("\n");
-                                    analisiProdotto.append("Revenue atteso (margine 30%): €").append(String.format("%,.2f", revenueAtteso)).append("\n");
-                                    analisiProdotto.append("Profitto stimato: €").append(String.format("%,.2f", profitto)).append("\n");
-
-                                    if (totalRevenue != null) {
-                                        analisiProdotto.append("Revenue storico totale: €").append(String.format("%,.2f", totalRevenue.doubleValue())).append("\n");
-                                    }
-
-                                    // ROI
-                                    double roi = (profitto / investimento) * 100;
-                                    analisiProdotto.append("ROI atteso: ").append(String.format("%.1f", roi)).append("%\n");
+                                Number totalRevenue = (Number) p.get("total_revenue");
+                                if (totalRevenue != null) {
+                                    a.setRevenueStorico(totalRevenue.doubleValue());
                                 }
                             } else {
-                                analisiProdotto.append("💰 PREVISIONI FINANZIARIE:\n");
-                                analisiProdotto.append("─".repeat(80)).append("\n");
-                                analisiProdotto.append("Nessun investimento necessario al momento.\n");
-                                analisiProdotto.append("Stock attuale sufficiente per la domanda corrente.\n");
+                                a.setInvestimento(0.0);
+                                a.setRevenueAtteso(0.0);
+                                a.setProfittoStimato(0.0);
+                                a.setRoiAtteso(0.0);
                             }
 
-                            // Aggiungi alla lista
-                            raccomandazioniList.add(analisiProdotto.toString());
+                            raccomandazioni.add(a);
                         });
-
-            } else {
-                raccomandazioniList.add("Nessun prodotto disponibile per l'analisi.");
             }
 
-            dto.setRaccomandazioni(raccomandazioniList);
+            dto.setRaccomandazioni(raccomandazioni);
 
-            // ========== PREVISIONI TOTALI ==========
-            StringBuilder previsioniTotali = new StringBuilder();
-            previsioniTotali.append("💰 PREVISIONI FINANZIARIE TOTALI\n\n");
+            // ========== PREVISIONI (Oggetto strutturato) ==========
+            PrevisioniDtoDto previsioni = new PrevisioniDtoDto();
 
             if (products != null && !products.isEmpty()) {
-                double totaleInvestimento = 0;
-                double totaleRevenue = 0;
+                double totInv = 0;
+                double totRev = 0;
 
-                for (Map<String, Object> product : products) {
-                    Number qty = (Number) product.get("suggested_order_quantity");
-                    Number price = (Number) product.get("price");
+                for (Map<String, Object> p : products) {
+                    Number qty = (Number) p.get("suggested_order_quantity");
+                    Number price = (Number) p.get("price");
 
                     if (qty != null && price != null && qty.intValue() > 0) {
-                        double investimento = qty.doubleValue() * price.doubleValue();
-                        totaleInvestimento += investimento;
-                        totaleRevenue += investimento * 1.3;
+                        double inv = qty.doubleValue() * price.doubleValue();
+                        totInv += inv;
+                        totRev += inv * 1.3;
                     }
                 }
 
-                previsioniTotali.append("Investimento totale consigliato:\n");
-                previsioniTotali.append("€ ").append(String.format("%,.2f", totaleInvestimento)).append("\n\n");
-
-                previsioniTotali.append("Revenue totale atteso (margine 30%):\n");
-                previsioniTotali.append("€ ").append(String.format("%,.2f", totaleRevenue)).append("\n\n");
-
-                previsioniTotali.append("Profitto totale stimato:\n");
-                previsioniTotali.append("€ ").append(String.format("%,.2f", totaleRevenue - totaleInvestimento)).append("\n\n");
-
-                // Riepilogo urgenze
                 long critici = products.stream()
                         .filter(p -> "ALTA".equals(p.get("urgency")))
                         .count();
+
                 long medi = products.stream()
                         .filter(p -> "MEDIA".equals(p.get("urgency")))
                         .count();
 
-                previsioniTotali.append("📊 RIEPILOGO ORDINI:\n");
-                if (critici > 0) {
-                    previsioniTotali.append("🔴 ").append(critici).append(" prodotti CRITICI da ordinare subito\n");
-                }
-                if (medi > 0) {
-                    previsioniTotali.append("🟡 ").append(medi).append(" prodotti da monitorare (attenzione media)\n");
-                }
-
-                previsioniTotali.append("\n📈 TREND:\n");
-                long bestSellers = products.stream()
+                long best = products.stream()
                         .filter(p -> {
                             Number rate = (Number) p.get("daily_sales_rate");
                             return rate != null && rate.doubleValue() > 3;
                         })
                         .count();
 
-                if (bestSellers > 0) {
-                    previsioniTotali.append("⚡ ").append(bestSellers).append(" best sellers ad alta rotazione\n");
-                }
-
-                previsioniTotali.append("• Analisi basata su dati storici reali\n");
-                previsioniTotali.append("• Raccomandazioni aggiornate in tempo reale\n");
-
+                previsioni.setInvestimentoTotale(totInv);
+                previsioni.setRevenueTotale(totRev);
+                previsioni.setProfittoTotale(totRev - totInv);
+                previsioni.setProdottiCritici((int) critici);
+                previsioni.setProdottiMedia((int) medi);
+                previsioni.setBestSellers((int) best);
             } else {
-                previsioniTotali.append("Dati insufficienti per generare previsioni.");
+                previsioni.setInvestimentoTotale(0.0);
+                previsioni.setRevenueTotale(0.0);
+                previsioni.setProfittoTotale(0.0);
+                previsioni.setProdottiCritici(0);
+                previsioni.setProdottiMedia(0);
+                previsioni.setBestSellers(0);
             }
 
-            dto.setPrevisioni(previsioniTotali.toString());
+            dto.setPrevisioni(previsioni);
 
         } catch (Exception e) {
             System.err.println("❌ Errore mappatura: " + e.getMessage());
             e.printStackTrace();
 
             dto.setInsights("Errore durante l'elaborazione dei dati");
-            dto.setRaccomandazioni(Collections.singletonList("Impossibile generare raccomandazioni"));
-            dto.setPrevisioni("Impossibile generare previsioni");
+            dto.setRaccomandazioni(new ArrayList<>());
+
+            PrevisioniDtoDto errorPrevisioni = new PrevisioniDtoDto();
+            errorPrevisioni.setInvestimentoTotale(0.0);
+            errorPrevisioni.setRevenueTotale(0.0);
+            errorPrevisioni.setProfittoTotale(0.0);
+            errorPrevisioni.setProdottiCritici(0);
+            errorPrevisioni.setProdottiMedia(0);
+            errorPrevisioni.setBestSellers(0);
+            dto.setPrevisioni(errorPrevisioni);
         }
 
         return dto;

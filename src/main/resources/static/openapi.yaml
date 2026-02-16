@@ -1240,11 +1240,85 @@ components:
     AIAnalyticsResponse:
       type: object
       properties:
-        previsioni:
-          type: object
+        insights:
+          type: string
+          description: Insights analisi completata
         raccomandazioni:
           type: array
           items:
-            type: string
-        insights:
-          type: object
+            $ref: '#/components/schemas/ArticoloAIDto'
+        previsioni:
+          $ref: '#/components/schemas/PrevisioniDto'
+
+    ArticoloAIDto:
+      type: object
+      properties:
+        productNumber:
+          type: integer
+        urgencyIcon:
+          type: string
+        productName:
+          type: string
+        productId:
+          type: string
+        category:
+          type: string
+        currentStock:
+          type: integer
+        totalSold:
+          type: integer
+        dailySalesRate:
+          type: number
+          format: double
+        daysOfStock:
+          type: number
+          format: double
+        price:
+          type: number
+          format: double
+        analysis:
+          type: string
+        analyzedWithAI:
+          type: boolean
+        recommendation:
+          type: string
+        suggestedOrderQuantity:
+          type: integer
+        stockStatus:
+          type: string
+        urgency:
+          type: string
+        investimento:
+          type: number
+          format: double
+        revenueAtteso:
+          type: number
+          format: double
+        profittoStimato:
+          type: number
+          format: double
+        revenueStorico:
+          type: number
+          format: double
+        roiAtteso:
+          type: number
+          format: double
+
+    PrevisioniDto:
+      type: object
+      properties:
+        investimentoTotale:
+          type: number
+          format: double
+        revenueTotale:
+          type: number
+          format: double
+        profittoTotale:
+          type: number
+          format: double
+        prodottiCritici:
+          type: integer
+        prodottiMedia:
+          type: integer
+        bestSellers:
+          type: integer

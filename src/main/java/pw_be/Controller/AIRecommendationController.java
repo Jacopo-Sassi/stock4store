@@ -27,10 +27,7 @@ public class AIRecommendationController implements AiAnalyticsApi {
             System.err.println("❌ Errore AI Analytics: " + e.getMessage());
             e.printStackTrace();
 
-            // Ritorna un DTO vuoto o di errore
             AIAnalyticsResponseDto errorResponse = new AIAnalyticsResponseDto();
-            // Setta campi di errore se il DTO li ha
-
             return ResponseEntity.status(500).body(errorResponse);
         }
     }

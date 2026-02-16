@@ -30,7 +30,6 @@ public class AIRecommendationService {
 
             System.out.println("🔍 Chiamando Python AI: " + url);
 
-            // Ottieni risposta come Map
             Map<String, Object> pythonResponse = restTemplate.getForObject(url, Map.class);
 
             if (pythonResponse == null) {
@@ -39,7 +38,6 @@ public class AIRecommendationService {
 
             System.out.println("📦 Risposta ricevuta, mappatura in corso...");
 
-            // Usa il mapper personalizzato
             AIAnalyticsResponseDto dto = mapper.mapToDto(pythonResponse);
 
             System.out.println("✅ DTO generato con successo");
@@ -53,7 +51,6 @@ public class AIRecommendationService {
         }
     }
 
-    // ✅ Aggiungi questo metodo per il controller SSE
     public Map<String, Object> getAIAnalyticsRaw() {
         try {
             String url = aiServiceUrl + "/api/recommendations";

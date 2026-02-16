@@ -9,10 +9,89 @@ from typing import Dict
 from database import DatabaseManager
 from config import Config
 
+# Check disponibilità AI
+try:
+    from llama_cpp import Llama
+    AI_AVAILABLE = True
+    print("✅ llama-cpp-python disponibile!")
+except ImportError:
+    AI_AVAILABLE = False
+    print("⚠️  llama-cpp-python non installato - Modalità base")
+
+class AIModelManager:
+    """Gestisce il modello AI (Llama/Mistral)"""
+    def __init__(self):
+        if not AI_AVAILABLE:
+            self.model = None
+            return
+
+        model_path = Config.MODEL_PATH
+        if not os.path.exists(model_path):
+            print(f"⚠️  Modello non trovato: {model_path}")
+            print("   Scarica un modello GGUF e mettilo nella cartella models/")
+            self.model = None
+            return
+
+        print(f"🔄 Caricamento modello AI: {os.path.basename(model_path)}")
+        try:
+            self.model = Llama(
+                model_path=model_path,
+                n_ctx=2048,
+                n_threads=Config.AI_N_THREADS,
+                n_gpu_layers=0  # CPU only
+            )
+            print("✅ Modello AI caricato con successo!")
+        except Exception as e:
+            print(f"❌ Errore caricamento modello: {e}")
+            self.model = None
+
+    def generate_ai_explanation(self, product_data: Dict) -> str:
+        """Genera spiegazione usando AI vera"""
+        if not self.model:
+            return None
+
+        prompt = f"""Sei un esperto di inventory management. Analizza questo prodotto e fornisci una raccomandazione d'acquisto professionale in italiano:
+
+Prodotto: {product_data['product_name']}
+Stock attuale: {product_data['current_stock']} unità
+Vendite totali: {product_data['total_sold']} unità
+Velocità vendita: {product_data['daily_sales_rate']} unità/giorno
+Giorni di stock rimanenti: {product_data['days_of_stock']} giorni
+Revenue totale: €{product_data['total_revenue']:.2f}
+Prezzo unitario: €{product_data['price']:.2f}
+
+Fornisci un'analisi con:
+1. Valutazione della situazione attuale
+2. Livello di urgenza e motivazione
+3. Quantità consigliata da ordinare
+4. Insight strategici sul prodotto
+
+Sii conciso e professionale (max 200 parole)."""
+
+        try:
+            response = self.model(
+                prompt,
+                max_tokens=400,
+                temperature=0.7,
+                stop=["</s>", "\n\n\n", "---"]
+            )
+            return response['choices'][0]['text'].strip()
+        except Exception as e:
+            print(f"⚠️  Errore generazione AI: {e}")
+            return None
+
+
 class PurchaseRecommendationAI:
     def __init__(self):
         self.db_manager = DatabaseManager()
-        print("✅ Analyzer inizializzato (modalità base - senza AI)")
+
+        # Inizializza AI se disponibile
+        self.ai_model = AIModelManager() if AI_AVAILABLE else None
+
+        if self.ai_model and self.ai_model.model:
+            print("🤖 Analyzer con AI ibrido attivo (AI solo per casi critici)!")
+        else:
+            print("📊 Analyzer in modalità logica veloce")
 
     def extract_sales_data(self) -> pd.DataFrame:
         """Estrae dati vendite dal database"""
@@ -59,7 +138,8 @@ class PurchaseRecommendationAI:
             raise
 
     def generate_explanation(self, product: Dict) -> str:
-        """Genera spiegazione dettagliata per la raccomandazione"""
+        """Genera spiegazione (AI solo per casi critici, altrimenti logica veloce)"""
+
         name = product['product_name']
         stock = product['current_stock']
         sold = product['total_sold']
@@ -68,66 +148,91 @@ class PurchaseRecommendationAI:
         revenue = product['total_revenue']
         urgency = product['urgency']
         suggested = product['suggested_order_quantity']
+        price = product.get('price', 0)
 
+        # Determina se il caso richiede analisi AI approfondita
+        needs_ai_analysis = False
+        ai_reason = ""
+
+        if self.ai_model and self.ai_model.model:
+            # Usa AI solo per:
+            # 1. Urgenze CRITICHE
+            if urgency == "ALTA":
+                needs_ai_analysis = True
+                ai_reason = "urgenza critica"
+
+            # 2. Prodotti premium (>500€)
+            elif price > 500:
+                needs_ai_analysis = True
+                ai_reason = "prodotto premium"
+
+            # 3. Best sellers con problemi di stock
+            elif rate > 3 and days < 10:
+                needs_ai_analysis = True
+                ai_reason = "best seller con stock critico"
+
+            # 4. Slow movers con stock eccessivo
+            elif rate < 0.5 and stock > 20:
+                needs_ai_analysis = True
+                ai_reason = "slow mover con eccesso"
+
+            # 5. Revenue molto alto
+            elif revenue > 5000:
+                needs_ai_analysis = True
+                ai_reason = "alto valore revenue"
+
+        # Se richiede AI, prova a generare con il modello
+        if needs_ai_analysis:
+            print(f"   🤖 Analisi AI per '{name[:40]}' ({ai_reason})...")
+            ai_response = self.ai_model.generate_ai_explanation(product)
+            if ai_response:
+                return f"🤖 ANALISI AI APPROFONDITA ({ai_reason.upper()}):\n\n{ai_response}\n\n{'─'*60}\n✨ Generato da AI per caso particolare"
+
+        # Logica veloce per tutti gli altri casi
         explanation = []
 
-        # Analisi situazione attuale
-        explanation.append(f"📊 ANALISI '{name}':")
-        explanation.append(f"   Stock attuale: {stock} unità - Vendite totali: {sold} unità")
-        explanation.append(f"   Velocità media: {rate} unità/giorno - Revenue: €{revenue:.2f}")
+        # Header compatto
+        explanation.append(f"📊 {name}")
+        explanation.append(f"Stock: {stock} unità | Vendite: {sold} | Velocità: {rate}/giorno | Durata: {days:.1f}gg | Revenue: €{revenue:.2f}")
 
-        # Diagnosi urgenza
+        # Diagnosi rapida
         if urgency == "ALTA":
-            explanation.append(f"\n🔴 URGENZA CRITICA:")
-            explanation.append(f"   Il tuo stock durerà solo {days:.1f} giorni al ritmo attuale!")
-            explanation.append(f"   Rischio rottura stock entro questa settimana.")
+            explanation.append(f"\n🔴 URGENZA CRITICA: Stock critico ({days:.1f} giorni). Ordina subito {suggested} unità.")
             if rate > 2:
-                explanation.append(f"   Prodotto ad alta rotazione ({rate} unità/giorno) - Priorità massima.")
+                explanation.append(f"   Alta rotazione ({rate}/giorno) - Priorità massima!")
 
         elif urgency == "MEDIA":
-            explanation.append(f"\n🟡 ATTENZIONE RICHIESTA:")
-            explanation.append(f"   Stock sufficiente per {days:.1f} giorni.")
-            explanation.append(f"   Considera di ordinare entro 2 settimane per evitare rotture.")
+            explanation.append(f"\n🟡 ATTENZIONE: Stock per {days:.1f} giorni. Ordina {suggested} unità entro 2 settimane.")
             if rate > 1:
-                explanation.append(f"   Buona rotazione ({rate} unità/giorno) - Monitora regolarmente.")
+                explanation.append(f"   Buona rotazione - Monitora regolarmente.")
 
         elif urgency == "BASSA":
-            explanation.append(f"\n🟢 SITUAZIONE SOTTO CONTROLLO:")
-            explanation.append(f"   Stock sufficiente per {days:.1f} giorni.")
-            explanation.append(f"   Nessuna urgenza immediata, monitora il trend.")
+            explanation.append(f"\n🟢 OK: Stock sufficiente ({days:.1f} giorni). Nessuna urgenza.")
 
-        else:  # NESSUNA
-            explanation.append(f"\n⚪ STOCK ECCESSIVO:")
-            explanation.append(f"   Hai scorte per oltre {days:.1f} giorni.")
-            explanation.append(f"   Non ordinare - Rischio di invenduto e costi di stoccaggio.")
-
-        # Raccomandazione specifica
-        if suggested > 0:
-            explanation.append(f"\n💡 RACCOMANDAZIONE:")
-            explanation.append(f"   Ordina {suggested} unità per coprire 30 giorni di vendite.")
-            explanation.append(f"   Questo ti proteggerà da eventuali picchi di domanda.")
-
-            # Calcolo investimento
-            if 'price' in product and product['price'] > 0:
-                investment = suggested * product['price']
-                expected_revenue = suggested * product['price'] * 1.3  # Margine stimato 30%
-                explanation.append(f"   Investimento necessario: €{investment:.2f}")
-                explanation.append(f"   Revenue atteso (con margine 30%): €{expected_revenue:.2f}")
         else:
-            explanation.append(f"\n✋ SUGGERIMENTO:")
-            explanation.append(f"   Non ordinare ora. Attendi che lo stock scenda sotto le {int(stock * 0.7)} unità.")
+            explanation.append(f"\n⚪ ECCESSO: Stock per {days:.1f}+ giorni. Non ordinare.")
 
-        # Insight aggiuntivi
-        if sold > 0:
-            avg_price = revenue / sold if sold > 0 else 0
-            if avg_price > 100:  # Prodotto di valore
-                explanation.append(f"\n💎 NOTA: Prodotto premium (€{avg_price:.2f}/unità) - Priorità alta anche con stock.")
+        # Raccomandazione economica
+        if suggested > 0:
+            investment = suggested * price
+            expected_return = investment * 1.3
+            explanation.append(f"\n💰 Investimento: €{investment:.2f} → Revenue atteso: €{expected_return:.2f}")
 
-            if rate > 3:
-                explanation.append(f"\n⚡ BEST SELLER: Rotazione eccezionale! Considera aumento scorta di sicurezza.")
+        # Insight rapidi
+        insights = []
+        avg_price = revenue / sold if sold > 0 else 0
 
-            if rate < 0.5 and stock > 20:
-                explanation.append(f"\n⚠️  SLOW MOVER: Bassa rotazione. Valuta promozioni o sconti per smaltire stock.")
+        if avg_price > 100:
+            insights.append("💎 Premium")
+        if rate > 3:
+            insights.append("⚡ Best Seller")
+        if rate < 0.5 and stock > 20:
+            insights.append("⚠️ Slow Mover")
+
+        if insights:
+            explanation.append(f"\n{' | '.join(insights)}")
+
+        explanation.append(f"\n{'─'*60}\n⚡ Analisi logica veloce")
 
         return "\n".join(explanation)
 
@@ -138,11 +243,13 @@ class PurchaseRecommendationAI:
                 'products': [],
                 'analysis_date': datetime.now().isoformat(),
                 'total_products_analyzed': 0,
-                'ai_enabled': False,
+                'ai_enabled': bool(self.ai_model and self.ai_model.model),
+                'ai_analyses_performed': 0,
                 'note': 'Nessun dato disponibile per analisi'
             }
 
         metrics = []
+        ai_count = 0  # Conta quante volte si usa AI
 
         for _, product in sales_df.iterrows():
             product_id = product['product_id']
@@ -194,6 +301,10 @@ class PurchaseRecommendationAI:
             # Genera spiegazione
             explanation = self.generate_explanation(product_data)
 
+            # Conta se ha usato AI
+            if explanation.startswith("🤖 ANALISI AI"):
+                ai_count += 1
+
             metrics.append({
                 'product_id': str(product_id),
                 'product_name': product['product_name'],
@@ -208,15 +319,20 @@ class PurchaseRecommendationAI:
                 'urgency': urgency,
                 'suggested_order_quantity': suggested_order,
                 'recommendation': f"Ordinare {suggested_order} unità - Urgenza: {urgency}",
-                'explanation': explanation
+                'explanation': explanation,
+                'analyzed_with_ai': explanation.startswith("🤖 ANALISI AI")
             })
 
         return {
             'products': metrics,
             'analysis_date': datetime.now().isoformat(),
             'total_products_analyzed': len(metrics),
-            'ai_enabled': False,
-            'note': 'Analisi basata su metriche avanzate con spiegazioni dettagliate.'
+            'ai_enabled': bool(self.ai_model and self.ai_model.model),
+            'ai_analyses_performed': ai_count,
+            'logic_analyses_performed': len(metrics) - ai_count,
+            'ai_mode': 'hybrid' if (self.ai_model and self.ai_model.model) else 'logic',
+            'efficiency_percent': round(((len(metrics) - ai_count) / len(metrics) * 100), 1) if len(metrics) > 0 else 0,
+            'note': f'Analisi ibrida: {ai_count} AI approfondite + {len(metrics)-ai_count} logica veloce' if ai_count > 0 else 'Analisi logica veloce per tutti i prodotti'
         }
 
     def run_analysis(self) -> Dict:
@@ -231,7 +347,13 @@ class PurchaseRecommendationAI:
         print("🔢 Calcolo metriche e generazione spiegazioni...")
         metrics = self.calculate_metrics(sales_df)
 
-        print(f"✅ Analisi completata! Analizzati {metrics['total_products_analyzed']} prodotti\n")
+        print(f"✅ Analisi completata! Analizzati {metrics['total_products_analyzed']} prodotti")
+        if metrics['ai_enabled']:
+            print(f"   🤖 Analisi AI: {metrics['ai_analyses_performed']} prodotti")
+            print(f"   ⚡ Logica veloce: {metrics['logic_analyses_performed']} prodotti")
+            print(f"   📊 Efficienza: {metrics['efficiency_percent']}% risparmiato\n")
+        else:
+            print(f"   Modalità: Logica veloce\n")
 
         return metrics
 
@@ -256,8 +378,8 @@ def main():
             print("📊 ANALISI DETTAGLIATA CON SPIEGAZIONI:\n")
             print("="*80)
 
-            # Mostra top 5 prodotti con spiegazioni complete
-            for i, p in enumerate(results['products'][:5], 1):
+            # Mostra tutti i prodotti con spiegazioni complete
+            for i, p in enumerate(results['products'], 1):
                 print(f"\n{'='*80}")
                 print(f"PRODOTTO #{i}")
                 print('='*80)
@@ -274,17 +396,32 @@ def main():
             if critical:
                 print(f"\n🔴 URGENZE CRITICHE ({len(critical)} prodotti):")
                 for p in critical:
-                    print(f"   • {p['product_name']:<40} → Ordina {p['suggested_order_quantity']} unità")
+                    ai_marker = "🤖" if p['analyzed_with_ai'] else "⚡"
+                    print(f"   {ai_marker} {p['product_name']:<40} → Ordina {p['suggested_order_quantity']} unità")
 
             if medium:
                 print(f"\n🟡 ATTENZIONE MEDIA ({len(medium)} prodotti):")
                 for p in medium:
-                    print(f"   • {p['product_name']:<40} → Ordina {p['suggested_order_quantity']} unità")
+                    ai_marker = "🤖" if p['analyzed_with_ai'] else "⚡"
+                    print(f"   {ai_marker} {p['product_name']:<40} → Ordina {p['suggested_order_quantity']} unità")
 
             # Calcolo investimento totale
             total_investment = sum(p['suggested_order_quantity'] * p['price']
                                    for p in results['products'] if p['suggested_order_quantity'] > 0)
             print(f"\n💰 INVESTIMENTO TOTALE CONSIGLIATO: €{total_investment:,.2f}")
+
+            # Statistiche analisi
+            print(f"\n📊 STATISTICHE ANALISI:")
+            print(f"   Prodotti analizzati: {results['total_products_analyzed']}")
+            if results['ai_enabled']:
+                print(f"   🤖 Analisi AI approfondite: {results['ai_analyses_performed']}")
+                print(f"   ⚡ Analisi logica veloce: {results['logic_analyses_performed']}")
+                print(f"   📈 Efficienza: {results['efficiency_percent']}% computazione risparmiata")
+                print(f"   🎯 Modalità: {results['ai_mode'].upper()}")
+            else:
+                print(f"   Modalità: LOGIC (AI non disponibile)")
+
+            print(f"\n💡 {results['note']}")
 
         else:
             print("⚠️  Nessun prodotto analizzato")

@@ -919,6 +919,11 @@ components:
           format: date-time
         online_relevant:
           type: integer
+        quantitaStock:
+          type: integer
+          example: 5
+          description: Quantità disponibile in magazzino
+
 
     ArticoloRequest:
       type: object

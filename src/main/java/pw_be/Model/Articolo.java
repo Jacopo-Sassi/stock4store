@@ -1,6 +1,7 @@
 package pw_be.Model;
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.Formula;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -138,6 +139,9 @@ public class Articolo {
 
     @Column(name = "online_relevant", nullable = false)
     private Integer onlineRelevant = 0;
+
+    @Formula("(SELECT COALESCE(s.quantita_stock, 0) FROM articolo_stock s WHERE s.codice_articolo = codice)")
+    private Integer quantitaStock;
 
     @PrePersist
     @PreUpdate

@@ -104,20 +104,22 @@ class PurchaseRecommendationAI:
                     COALESCE(a.gruppo, 'N/A') as category,
                     COALESCE(a.prezzodilistino, 0) as price,
                     COALESCE(ast.quantita_stock, 0) as current_stock,
-                    COUNT(oi.id) as total_orders,
-                    COALESCE(SUM(oi.quantita), 0) as total_quantity_sold,
-                    COALESCE(AVG(oi.quantita), 0) as avg_quantity_per_order,
-                    COALESCE(SUM(oi.subtotale), 0) as total_revenue,
-                    MIN(o.data_ordine) as first_sale_date,
-                    MAX(o.data_ordine) as last_sale_date
+                    COUNT(sds.numero) as total_receipts,  -- Numero scontrini distinti
+                    COALESCE(SUM(CAST(sds.quantita AS numeric)), 0) as total_quantity_sold,
+                    COALESCE(AVG(CAST(sds.quantita AS numeric)), 0) as avg_quantity_per_receipt,
+                    COALESCE(SUM(CAST(sds.importo AS numeric)), 0) as total_revenue,
+                    MIN(sds.dataora) as first_sale_date,
+                    MAX(sds.dataora) as last_sale_date
                 FROM articoli a
                          LEFT JOIN articolo_stock ast ON a.codice = ast.codice_articolo
-                         LEFT JOIN ordini_items oi ON a.codice = oi.codice_articolo
-                         LEFT JOIN ordini o ON oi.ordine_id = o.id
+                         LEFT JOIN sco_dettaglio_sto sds ON a.codice = sds.codarticolo
+                    AND sds.tipo_mov = '-'  -- Solo vendite (non resi)
                 GROUP BY a.codice, a.descrizione, a.gruppo, a.prezzodilistino, ast.quantita_stock
+                HAVING COUNT(sds.numero) > 0 OR ast.quantita_stock IS NOT NULL  -- Solo prodotti rilevanti
                 ORDER BY total_quantity_sold DESC NULLS LAST
                 LIMIT 20; \
                 """
+
 
         try:
             with conn.cursor() as cur:

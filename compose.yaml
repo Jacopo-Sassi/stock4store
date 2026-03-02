@@ -9,7 +9,7 @@ services:
       POSTGRES_PASSWORD: admin123
       POSTGRES_DB: myappdb
     ports:
-      - "5433:5432"
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./init-scripts:/docker-entrypoint-initdb.d
@@ -52,7 +52,7 @@ services:
       dockerfile: Dockerfile
     container_name: pw_backend
     environment:
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5433/myappdb
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/myappdb
       - SPRING_DATASOURCE_USERNAME=admin
       - SPRING_DATASOURCE_PASSWORD=admin123
       - AI_SERVICE_URL=http://ai-service:5001

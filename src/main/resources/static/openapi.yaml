@@ -1,0 +1,1329 @@
+openapi: 3.0.3
+info:
+  title: PW Backend API - Gestione Gioielleria
+  description: API per gestione inventario articoli, ordini, fornitori e analytics
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Development Server
+
+tags:
+  - name: Authentication
+    description: Operazioni di autenticazione
+  - name: Dashboard
+    description: Dashboard principale
+  - name: Articoli
+    description: Gestione articoli e inventario
+  - name: Ordini
+    description: Gestione ordini
+  - name: Fornitori
+    description: Gestione fornitori
+  - name: Gerarchie
+    description: Gestione gerarchie prodotti
+  - name: Scontrini
+    description: Gestione scontrini e dettagli vendite
+  - name: Analytics
+    description: Analytics e reportistica
+  - name: AI Analytics
+    description: Analytics con intelligenza artificiale
+
+paths:
+  /api/auth/login:
+    post:
+      tags:
+        - Authentication
+      summary: Login utente
+      description: Autentica un utente tramite nome utente e password (SHA-256)
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login effettuato con successo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          description: Credenziali non valide
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/auth/verify:
+    post:
+      tags:
+        - Authentication
+      summary: Verifica token
+      description: Verifica la validità del token JWT
+      operationId: verifyToken
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Token valido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  utente:
+                    $ref: '#/components/schemas/UtenteResponse'
+        '401':
+          description: Token non valido o scaduto
+
+  /api/auth/logout:
+    post:
+      tags:
+        - Authentication
+      summary: Logout utente
+      description: Effettua il logout e invalida il token
+      operationId: logout
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout effettuato con successo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Logout effettuato con successo"
+        '401':
+          description: Token non valido
+
+  /api/auth/me:
+    get:
+      tags:
+        - Authentication
+      summary: Profilo utente corrente
+      description: Recupera le informazioni dell'utente autenticato
+      operationId: getCurrentUser
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Informazioni utente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UtenteResponse'
+        '401':
+          description: Non autenticato
+
+  /api/auth/change-password:
+    put:
+      tags:
+        - Authentication
+      summary: Cambia password
+      description: Modifica la password dell'utente autenticato
+      operationId: changePassword
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChangePasswordRequest'
+      responses:
+        '200':
+          description: Password modificata con successo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Password modificata con successo"
+        '400':
+          description: Password attuale non corretta
+        '401':
+          description: Non autenticato
+
+  /api/dashboard:
+    get:
+      tags:
+        - Dashboard
+      summary: Recupera dati dashboard
+      description: Ottiene articoli, ordini e attività per la dashboard
+      operationId: getDashboard
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dati dashboard recuperati con successo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+
+  /api/articoli:
+    get:
+      tags:
+        - Articoli
+      summary: Lista tutti gli articoli
+      description: Recupera l'elenco completo degli articoli con filtri opzionali
+      operationId: getArticoli
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: gruppo
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: stato
+          in: query
+          required: false
+          schema:
+            type: string
+        - name: stagione
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Lista articoli
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Articolo'
+
+    post:
+      tags:
+        - Articoli
+      summary: Crea nuovo articolo
+      description: Aggiunge un nuovo articolo all'inventario
+      operationId: createArticolo
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticoloRequest'
+      responses:
+        '201':
+          description: Articolo creato con successo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articolo'
+
+  /api/articoli/{codice}:
+    get:
+      tags:
+        - Articoli
+      summary: Recupera articolo per codice
+      operationId: getArticoloByCodice
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codice
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Articolo trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articolo'
+        '404':
+          description: Articolo non trovato
+
+    put:
+      tags:
+        - Articoli
+      summary: Aggiorna articolo
+      operationId: updateArticolo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codice
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ArticoloRequest'
+      responses:
+        '200':
+          description: Articolo aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articolo'
+
+    delete:
+      tags:
+        - Articoli
+      summary: Elimina articolo
+      operationId: deleteArticolo
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codice
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '204':
+          description: Articolo eliminato con successo
+
+  /api/articoli/{codice}/stock:
+    get:
+      tags:
+        - Articoli
+      summary: Verifica stock articolo
+      description: Controlla la disponibilità di un articolo
+      operationId: checkStock
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: codice
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Disponibilità stock verificata
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  codice:
+                    type: string
+                  quantitaDisponibile:
+                    type: integer
+        '404':
+          description: Articolo non trovato
+
+  /api/articoli/search:
+    post:
+      tags:
+        - Articoli
+      summary: Ricerca articoli
+      description: Cerca articoli tramite searchbar e filtri
+      operationId: searchArticoli
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Risultati ricerca
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Articolo'
+
+  /api/articoli/ean/{ean}:
+    get:
+      tags:
+        - Articoli
+      summary: Cerca articolo per EAN
+      operationId: getArticoloByEan
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: ean
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Articolo trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Articolo'
+
+  /api/ordini:
+    get:
+      tags:
+        - Ordini
+      summary: Lista tutti gli ordini
+      operationId: getOrdini
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: stato
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/StatoOrdine'
+      responses:
+        '200':
+          description: Lista ordini
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ordine'
+
+    post:
+      tags:
+        - Ordini
+      summary: Crea nuovo ordine
+      operationId: createOrdine
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrdineRequest'
+      responses:
+        '201':
+          description: Ordine creato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordine'
+
+  /api/ordini/{id}:
+    get:
+      tags:
+        - Ordini
+      summary: Recupera ordine per ID
+      operationId: getOrdineById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Ordine trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordine'
+
+  /api/ordini/{id}/avanza:
+    put:
+      tags:
+        - Ordini
+      summary: Avanza stato ordine
+      description: Cambia lo stato dell'ordine (ENUM)
+      operationId: avanzaOrdine
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                nuovoStato:
+                  $ref: '#/components/schemas/StatoOrdine'
+      responses:
+        '200':
+          description: Stato ordine aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ordine'
+
+  /api/fornitori:
+    get:
+      tags:
+        - Fornitori
+      summary: Lista tutti i fornitori
+      operationId: getFornitori
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista fornitori
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fornitore'
+
+    post:
+      tags:
+        - Fornitori
+      summary: Crea nuovo fornitore
+      operationId: createFornitore
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FornitoreRequest'
+      responses:
+        '201':
+          description: Fornitore creato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fornitore'
+
+  /api/fornitori/{id}:
+    get:
+      tags:
+        - Fornitori
+      summary: Recupera fornitore per ID
+      operationId: getFornitoreById
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Fornitore trovato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fornitore'
+
+    put:
+      tags:
+        - Fornitori
+      summary: Aggiorna fornitore
+      operationId: updateFornitore
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FornitoreRequest'
+      responses:
+        '200':
+          description: Fornitore aggiornato
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Fornitore'
+
+  /api/fornitori/search:
+    get:
+      tags:
+        - Fornitori
+      summary: Cerca fornitori
+      operationId: searchFornitori
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: query
+          in: query
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Risultati ricerca
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Fornitore'
+
+  /api/gerarchie:
+    get:
+      tags:
+        - Gerarchie
+      summary: Lista gerarchie prodotti
+      operationId: getGerarchie
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Lista gerarchie
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Gerarchia'
+
+    post:
+      tags:
+        - Gerarchie
+      summary: Crea nuova gerarchia
+      operationId: createGerarchia
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GerarchiaRequest'
+      responses:
+        '201':
+          description: Gerarchia creata
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Gerarchia'
+
+  /api/scontrini:
+    get:
+      tags:
+        - Scontrini
+      summary: Lista dettagli scontrini
+      operationId: getScontrini
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: dataInizio
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: dataFine
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        '200':
+          description: Lista scontrini
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ScontrinoDettaglio'
+
+  /api/analytics/articoli:
+    get:
+      tags:
+        - Analytics
+      summary: Analytics articoli
+      description: Recupera dati analytics per gli articoli
+      operationId: getAnalyticsArticoli
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dati analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AnalyticsResponse'
+
+  /api/ai-analytics:
+    get:
+      tags:
+        - AI Analytics
+      summary: AI Analytics
+      description: Frontend chiama BE che chiama servizio Python per analytics AI
+      operationId: getAIAnalytics
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Dati AI analytics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AIAnalyticsResponse'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Token JWT ottenuto dal login
+
+  schemas:
+    LoginRequest:
+      type: object
+      required:
+        - nomeUtente
+        - password
+      properties:
+        nomeUtente:
+          type: string
+          example: "admin"
+          description: Nome utente
+        password:
+          type: string
+          format: password
+          example: "240be518fabd2724ddb6f04eeb1da5967448d7e831c08c8fa822809f74c720a9"
+          description: Password hashata in SHA-256 (dal frontend)
+
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          description: Token JWT per autenticazione
+        utente:
+          $ref: '#/components/schemas/UtenteResponse'
+
+    UtenteResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          example: 1
+        nomeUtente:
+          type: string
+          example: "admin"
+        email:
+          type: string
+          format: email
+          example: "admin@gioielleria.it"
+        ruolo:
+          type: string
+          enum: [ADMIN, STAFF]
+          example: "ADMIN"
+        attivo:
+          type: boolean
+          example: true
+        dataCreazione:
+          type: string
+          format: date-time
+        ultimoAccesso:
+          type: string
+          format: date-time
+
+    ChangePasswordRequest:
+      type: object
+      required:
+        - passwordAttuale
+        - nuovaPassword
+      properties:
+        passwordAttuale:
+          type: string
+          format: password
+          description: Password attuale hashata in SHA-256
+        nuovaPassword:
+          type: string
+          format: password
+          description: Nuova password hashata in SHA-256
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+          example: 401
+        message:
+          type: string
+          example: "Credenziali non valide"
+        timestamp:
+          type: string
+          format: date-time
+          example: "2026-02-12T11:27:00.000000"
+
+    DashboardResponse:
+      type: object
+      properties:
+        articoli:
+          type: array
+          items:
+            $ref: '#/components/schemas/Articolo'
+        ordini:
+          type: array
+          items:
+            $ref: '#/components/schemas/Ordine'
+        attivita:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attivita'
+        statistiche:
+          type: object
+          properties:
+            totaleArticoli:
+              type: integer
+            totaleOrdini:
+              type: integer
+            valoreInventario:
+              type: number
+              format: double
+
+    Articolo:
+      type: object
+      properties:
+        codice:
+          type: string
+          example: "ANL001"
+        descrizione:
+          type: string
+          example: "Anello Solitario Diamante 0.50ct"
+        ean:
+          type: string
+          example: "8001234567890"
+        prezzodilistino:
+          type: number
+          format: double
+          example: 2599.00
+        gruppo:
+          type: string
+          example: "ANELLI"
+        stato:
+          type: string
+          example: "AT"
+        lp1:
+          type: string
+          example: "GIO"
+        lp2:
+          type: string
+          example: "ANL"
+        lp3:
+          type: string
+          example: "DIA"
+        lp4:
+          type: string
+        lp5:
+          type: string
+        lineaprod:
+          type: string
+          example: "Anelli Diamanti"
+        stagione:
+          type: string
+          example: "2026 S/S"
+        linkimmagine:
+          type: string
+        bidone:
+          type: string
+        scodescri:
+          type: string
+          example: "Anello Solitr"
+        tipo:
+          type: string
+          example: "ST"
+        iva:
+          type: string
+          example: "22"
+        codfornitore:
+          type: string
+        peso:
+          type: string
+        note:
+          type: string
+        ubicazione:
+          type: string
+          example: "SCAFF-A12"
+        datainserimento:
+          type: string
+          format: date-time
+        dataritiro:
+          type: string
+          format: date-time
+        scortaminima:
+          type: integer
+        codpadre:
+          type: string
+        qtafiglio:
+          type: integer
+        codaccessori:
+          type: string
+        grcassa:
+          type: string
+        ordinabile:
+          type: string
+        datascad:
+          type: string
+          format: date-time
+        cod_iniziale:
+          type: string
+        var1:
+          type: string
+        var2:
+          type: string
+        var3:
+          type: string
+        var4:
+          type: string
+        cursoremod:
+          type: string
+        gestgiacenza:
+          type: string
+        codice2:
+          type: string
+        confezione:
+          type: string
+        g_cliente:
+          type: string
+        progre:
+          type: integer
+        dataultimamodifica:
+          type: string
+          format: date-time
+        online_relevant:
+          type: integer
+        quantitaStock:
+          type: integer
+          example: 5
+          description: Quantità disponibile in magazzino
+
+
+    ArticoloRequest:
+      type: object
+      required:
+        - codice
+        - descrizione
+        - prezzodilistino
+        - gruppo
+        - stato
+      properties:
+        codice:
+          type: string
+        descrizione:
+          type: string
+        ean:
+          type: string
+        prezzodilistino:
+          type: number
+          format: double
+        gruppo:
+          type: string
+        stato:
+          type: string
+        lp1:
+          type: string
+        lp2:
+          type: string
+        lp3:
+          type: string
+        lp4:
+          type: string
+        lp5:
+          type: string
+        lineaprod:
+          type: string
+        stagione:
+          type: string
+        linkimmagine:
+          type: string
+        scodescri:
+          type: string
+        tipo:
+          type: string
+        iva:
+          type: string
+        codfornitore:
+          type: string
+        peso:
+          type: string
+        note:
+          type: string
+        ubicazione:
+          type: string
+        scortaminima:
+          type: integer
+        ordinabile:
+          type: string
+        online_relevant:
+          type: integer
+
+    SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+          example: "anello"
+        gruppo:
+          type: string
+          example: "ANELLI"
+        prezzoMin:
+          type: number
+          format: double
+        prezzoMax:
+          type: number
+          format: double
+        stato:
+          type: string
+        stagione:
+          type: string
+
+    Ordine:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        numeroOrdine:
+          type: string
+          example: "ORD-2026-001"
+        stato:
+          $ref: '#/components/schemas/StatoOrdine'
+        articoli:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdineItem'
+        totale:
+          type: number
+          format: double
+        dataOrdine:
+          type: string
+          format: date-time
+        fornitoreId:
+          type: integer
+          format: int64
+
+    OrdineRequest:
+      type: object
+      required:
+        - articoli
+      properties:
+        fornitoreId:
+          type: integer
+          format: int64
+        articoli:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrdineItemRequest'
+
+    OrdineItem:
+      type: object
+      properties:
+        codiceArticolo:
+          type: string
+        descrizioneArticolo:
+          type: string
+        quantita:
+          type: integer
+        prezzoUnitario:
+          type: number
+          format: double
+        subtotale:
+          type: number
+          format: double
+
+    OrdineItemRequest:
+      type: object
+      required:
+        - codiceArticolo
+        - quantita
+      properties:
+        codiceArticolo:
+          type: string
+        quantita:
+          type: integer
+
+    StatoOrdine:
+      type: string
+      enum:
+        - CREATO
+        - IN_LAVORAZIONE
+        - SPEDITO
+        - CONSEGNATO
+        - ANNULLATO
+
+    Fornitore:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        nome:
+          type: string
+          example: "Swarovski Italia SRL"
+        partitaIva:
+          type: string
+          example: "12345678901"
+        email:
+          type: string
+          format: email
+        telefono:
+          type: string
+        indirizzo:
+          type: string
+        citta:
+          type: string
+        cap:
+          type: string
+        paese:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    FornitoreRequest:
+      type: object
+      required:
+        - nome
+        - email
+      properties:
+        nome:
+          type: string
+        partitaIva:
+          type: string
+        email:
+          type: string
+        telefono:
+          type: string
+        indirizzo:
+          type: string
+        citta:
+          type: string
+        cap:
+          type: string
+        paese:
+          type: string
+
+    Gerarchia:
+      type: object
+      properties:
+        lp1:
+          type: string
+        lp2:
+          type: string
+        lp3:
+          type: string
+        lp4:
+          type: string
+        lp5:
+          type: string
+        descri1:
+          type: string
+        descri2:
+          type: string
+        g_cliente:
+          type: string
+        progre:
+          type: integer
+        dataultimamodifica:
+          type: string
+          format: date-time
+
+    GerarchiaRequest:
+      type: object
+      properties:
+        lp1:
+          type: string
+        lp2:
+          type: string
+        lp3:
+          type: string
+        lp4:
+          type: string
+        lp5:
+          type: string
+        descri1:
+          type: string
+        descri2:
+          type: string
+        g_cliente:
+          type: string
+
+    ScontrinoDettaglio:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        contatore:
+          type: integer
+        numero:
+          type: integer
+        dataora:
+          type: string
+          format: date-time
+        codnegozio:
+          type: string
+        codpostazione:
+          type: string
+        riga:
+          type: integer
+        codarticolo:
+          type: string
+        ean:
+          type: string
+        descriArticolo:
+          type: string
+        quantita:
+          type: string
+        importo:
+          type: string
+        tipo_mov:
+          type: string
+
+    Attivita:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+        tipo:
+          type: string
+          example: "NUOVO_ORDINE"
+        descrizione:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    AnalyticsResponse:
+      type: object
+      properties:
+        articoliPiuVenduti:
+          type: array
+          items:
+            $ref: '#/components/schemas/Articolo'
+        venditeTotali:
+          type: number
+          format: double
+        ordiniMensili:
+          type: integer
+        gruppiPerformance:
+          type: object
+          additionalProperties:
+            type: number
+
+    AIAnalyticsResponse:
+      type: object
+      properties:
+        insights:
+          type: string
+          description: Insights analisi completata
+        raccomandazioni:
+          type: array
+          items:
+            $ref: '#/components/schemas/ArticoloAIDto'
+        previsioni:
+          $ref: '#/components/schemas/PrevisioniDto'
+
+    ArticoloAIDto:
+      type: object
+      properties:
+        productNumber:
+          type: integer
+        urgencyIcon:
+          type: string
+        productName:
+          type: string
+        productId:
+          type: string
+        category:
+          type: string
+        currentStock:
+          type: integer
+        totalSold:
+          type: integer
+        dailySalesRate:
+          type: number
+          format: double
+        daysOfStock:
+          type: number
+          format: double
+        price:
+          type: number
+          format: double
+        analysis:
+          type: string
+        analyzedWithAI:
+          type: boolean
+        recommendation:
+          type: string
+        suggestedOrderQuantity:
+          type: integer
+        stockStatus:
+          type: string
+        urgency:
+          type: string
+        investimento:
+          type: number
+          format: double
+        revenueAtteso:
+          type: number
+          format: double
+        profittoStimato:
+          type: number
+          format: double
+        revenueStorico:
+          type: number
+          format: double
+        roiAtteso:
+          type: number
+          format: double
+
+    PrevisioniDto:
+      type: object
+      properties:
+        investimentoTotale:
+          type: number
+          format: double
+        revenueTotale:
+          type: number
+          format: double
+        profittoTotale:
+          type: number
+          format: double
+        prodottiCritici:
+          type: integer
+        prodottiMedia:
+          type: integer
+        bestSellers:
+          type: integer

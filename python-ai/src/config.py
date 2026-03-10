@@ -41,7 +41,7 @@ class Config:
     AI_N_BATCH = int(os.getenv('AI_N_BATCH', 512))  # 512 ottimale per CPU
     
     # Generation settings
-    AI_MAX_TOKENS = int(os.getenv('AI_MAX_TOKENS', 250))  # 250 invece di 2048 (prompt generation)
+    AI_MAX_TOKENS = int(os.getenv('AI_MAX_TOKENS', 500))  # 250 invece di 2048 (prompt generation)
     AI_TEMPERATURE = float(os.getenv('AI_TEMPERATURE', 0.6))  # 0.6 più deterministico
     AI_TOP_P = float(os.getenv('AI_TOP_P', 0.9))
     AI_REPEAT_PENALTY = float(os.getenv('AI_REPEAT_PENALTY', 1.15))

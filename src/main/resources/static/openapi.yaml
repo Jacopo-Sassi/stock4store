@@ -564,6 +564,26 @@ paths:
               schema:
                 $ref: '#/components/schemas/Fornitore'
 
+    delete:
+      tags:
+        - Fornitori
+      summary: Elimina fornitore
+      operationId: deleteFornitore
+      security:
+        - bearerAuth: [ ]
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Fornitore eliminato con successo
+
+
+
   /api/fornitori/search:
     get:
       tags:

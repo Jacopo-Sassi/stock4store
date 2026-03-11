@@ -60,4 +60,10 @@ public class Fornitore_Service {
         Fornitore updatedFornitore = fornitoreRepository.save(existingFornitore);
         return fornitoreMapper.toDto(updatedFornitore);
     }
+
+    public void deleteFornitore(Long id) {
+        Fornitore existingFornitore = fornitoreRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Fornitore non trovato con id: " + id));
+        fornitoreRepository.delete(existingFornitore);
+    }
 }

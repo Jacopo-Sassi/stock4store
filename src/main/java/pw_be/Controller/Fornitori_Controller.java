@@ -50,4 +50,10 @@ public class Fornitori_Controller implements FornitoriApi {
         FornitoreDto updatedFornitore = fornitoreService.updateFornitore(id, fornitoreRequestDto);
         return ResponseEntity.ok(updatedFornitore);
     }
+
+    @Override
+    public ResponseEntity<Void> _deleteFornitore(Long id) {
+        fornitoreService.deleteFornitore(id);
+        return ResponseEntity.noContent().build();
+    }
 }

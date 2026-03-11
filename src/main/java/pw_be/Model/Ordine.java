@@ -2,10 +2,13 @@ package pw_be.Model;
 
 import jakarta.persistence.*;
 import lombok.Data;
+import org.hibernate.annotations.CreationTimestamp;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Data
 @Entity
@@ -16,7 +19,13 @@ public class Ordine {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "numero_ordine", unique = true, nullable = false, length = 50)
+    @Column(
+            name = "numero_ordine",
+            unique = true,
+            nullable = false,
+            length = 50
+            // ← rimossi insertable = false e updatable = false
+    )
     private String numeroOrdine;
 
     @Column(nullable = false, length = 50)
@@ -25,7 +34,8 @@ public class Ordine {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal totale;
 
-    @Column(name = "data_ordine")
+    @CreationTimestamp
+    @Column(name = "data_ordine", updatable = false)
     private LocalDateTime dataOrdine;
 
     @Column(name = "fornitore_id", nullable = false)
@@ -35,7 +45,13 @@ public class Ordine {
     private List<Ordine_Item> items = new ArrayList<>();
 
     @PrePersist
-    protected void onCreate() {
-        dataOrdine = LocalDateTime.now();
+    public void generaNumeroOrdine() {
+        if (this.numeroOrdine == null) {
+            this.numeroOrdine = "ORD-"
+                    + java.time.LocalDate.now()
+                    .format(java.time.format.DateTimeFormatter.BASIC_ISO_DATE)
+                    + "-"
+                    + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
+        }
     }
 }

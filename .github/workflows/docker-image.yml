@@ -7,6 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
+  IMAGE_NAME_BACKEND: ${{ toLower(github.repository) }}-backend
+  IMAGE_NAME_PYAI: ${{ toLower(github.repository) }}-python-ai
 
 jobs:
   build-and-push-images:
@@ -21,23 +23,10 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # Ensure buildx is available and a builder instance is created
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
-
-      - name: Compute lowercase owner and repo
-        id: vars
-        run: |
-          # GITHUB_REPOSITORY is OWNER/REPO; extract owner and repo and lowercase them
-          owner="${GITHUB_REPOSITORY%%/*}"
-          repo="${GITHUB_REPOSITORY#*/}"
-          owner_lower=$(echo "$owner" | tr '[:upper:]' '[:lower:]')
-          repo_lower=$(echo "$repo" | tr '[:upper:]' '[:lower:]')
-          # lower_repo contains lower owner/repo as requested
-          lower_repo="${owner_lower}/${repo_lower}"
-          echo "owner=${owner_lower}" >> $GITHUB_OUTPUT
-          echo "repo=${repo_lower}" >> $GITHUB_OUTPUT
-          echo "lower_repo=${lower_repo}" >> $GITHUB_OUTPUT
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
@@ -49,21 +38,33 @@ jobs:
       ########################
       # Backend image
       ########################
+      - name: Extract metadata for backend image
+        id: meta-backend
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+
       - name: Build and push backend Docker image (amd64)
         id: build-push-backend
         uses: docker/build-push-action@v4
         with:
+          # ensure the build uses the Buildx instance created above
           builder: ${{ steps.buildx.outputs.name }}
           context: .
           push: true
           platforms: linux/amd64
-          # Single explicit tag (quoted in YAML list) to avoid metadata-based multiple tags
-          tags:
-            - ghcr.io/${{ steps.vars.outputs.lower_repo }}-backend:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
 
       ########################
       # python-ai image
       ########################
+      - name: Extract metadata for python-ai image
+        id: meta-pyai
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}
+
       - name: Build and push python-ai Docker image (amd64)
         id: build-push-pyai
         uses: docker/build-push-action@v4
@@ -73,5 +74,5 @@ jobs:
           file: python-ai/Dockerfile
           push: true
           platforms: linux/amd64
-          tags:
-            - ghcr.io/${{ steps.vars.outputs.lower_repo }}-python-ai:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}:${{ github.sha }}
+          labels: ${{ steps.meta-pyai.outputs.labels }}

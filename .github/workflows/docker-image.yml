@@ -7,8 +7,6 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ${{ toLower(github.repository) }}-backend
-  IMAGE_NAME_PYAI: ${{ toLower(github.repository) }}-python-ai
 
 jobs:
   build-and-push-images:
@@ -23,10 +21,15 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
-      # Ensure buildx is available and a builder instance is created
       - name: Set up Docker Buildx
         id: buildx
         uses: docker/setup-buildx-action@v2
+
+      - name: Compute lowercase repository name
+        id: vars
+        run: |
+          # GITHUB_REPOSITORY is OWNER/REPO; convert it to lowercase for valid image names
+          echo "lower_repo=$(echo \"${GITHUB_REPOSITORY}\" | tr '[:upper:]' '[:lower:]')" >> $GITHUB_OUTPUT
 
       - name: Log in to the Container registry
         uses: docker/login-action@v2
@@ -42,7 +45,7 @@ jobs:
         id: meta-backend
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
+          images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.lower_repo }}-backend
 
       - name: Build and push backend Docker image (amd64)
         id: build-push-backend
@@ -53,7 +56,8 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          # Use a single explicit tag to avoid multiple tag entries
+          tags: ${{ env.REGISTRY }}/${{ steps.vars.outputs.lower_repo }}-backend:${{ github.sha }}
           labels: ${{ steps.meta-backend.outputs.labels }}
 
       ########################
@@ -63,7 +67,7 @@ jobs:
         id: meta-pyai
         uses: docker/metadata-action@v4
         with:
-          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}
+          images: ${{ env.REGISTRY }}/${{ steps.vars.outputs.lower_repo }}-python-ai
 
       - name: Build and push python-ai Docker image (amd64)
         id: build-push-pyai
@@ -74,5 +78,6 @@ jobs:
           file: python-ai/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}:${{ github.sha }}
+          # Single explicit tag for python-ai
+          tags: ${{ env.REGISTRY }}/${{ steps.vars.outputs.lower_repo }}-python-ai:${{ github.sha }}
           labels: ${{ steps.meta-pyai.outputs.labels }}

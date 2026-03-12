@@ -53,7 +53,7 @@ jobs:
           context: .
           push: true
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}:latest
           labels: ${{ steps.meta-backend.outputs.labels }}
 
       ########################
@@ -74,5 +74,5 @@ jobs:
           file: python-ai/Dockerfile
           push: true
           platforms: linux/amd64
-          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}:${{ github.sha }}
+          tags: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}:${{ github.sha }},${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}:latest
           labels: ${{ steps.meta-pyai.outputs.labels }}

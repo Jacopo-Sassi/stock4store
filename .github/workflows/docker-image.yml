@@ -1,5 +1,4 @@
-#
-name: Create and publish Docker images for backend and python-ai
+name: Create and publish Docker images for backend and python-ai (amd64)
 
 # Run on pushes to main
 on:
@@ -24,7 +23,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # Ensure buildx is available and a builder instance is created
       - name: Set up Docker Buildx
+        id: buildx
         uses: docker/setup-buildx-action@v2
 
       - name: Log in to the Container registry
@@ -34,34 +35,41 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # Generate metadata (tags, labels) for backend image
+      ########################
+      # Backend image
+      ########################
       - name: Extract metadata for backend image
         id: meta-backend
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_BACKEND }}
 
-      - name: Build and push backend Docker image
-        id: push-backend
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+      - name: Build and push backend Docker image (amd64)
+        id: build-push-backend
+        uses: docker/build-push-action@v4
         with:
+          # ensure the build uses the Buildx instance created above
+          builder: ${{ steps.buildx.outputs.name }}
           context: .
           push: true
           platforms: linux/amd64
           tags: ${{ steps.meta-backend.outputs.tags }}
           labels: ${{ steps.meta-backend.outputs.labels }}
 
-      # Generate metadata (tags, labels) for python-ai image
+      ########################
+      # python-ai image
+      ########################
       - name: Extract metadata for python-ai image
         id: meta-pyai
-        uses: docker/metadata-action@9ec57ed1fcdbf14dcef7dfbe97b2010124a938b7
+        uses: docker/metadata-action@v4
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME_PYAI }}
 
-      - name: Build and push python-ai Docker image
-        id: push-pyai
-        uses: docker/build-push-action@f2a1d5e99d037542a71f64918e516c093c6f3fc4
+      - name: Build and push python-ai Docker image (amd64)
+        id: build-push-pyai
+        uses: docker/build-push-action@v4
         with:
+          builder: ${{ steps.buildx.outputs.name }}
           context: python-ai
           file: python-ai/Dockerfile
           push: true

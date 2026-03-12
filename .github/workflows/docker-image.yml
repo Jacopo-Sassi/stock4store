@@ -7,8 +7,8 @@ on:
 
 env:
   REGISTRY: ghcr.io
-  IMAGE_NAME_BACKEND: ${{ github.repository }}-backend
-  IMAGE_NAME_PYAI: ${{ github.repository }}-python-ai
+  IMAGE_NAME_BACKEND: ${{ toLower(github.repository) }}-backend
+  IMAGE_NAME_PYAI: ${{ toLower(github.repository) }}-python-ai
 
 jobs:
   build-and-push-images:

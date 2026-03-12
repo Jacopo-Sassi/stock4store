@@ -22,7 +22,7 @@ services:
       retries: 5
 
   ai-service:
-    image: ghcr.io/fondazioneedulife/stock4store-python-ai:main
+    image: ghcr.io/fondazioneedulife/stock4store-python-ai:latest
     container_name: pw_ai_service
     environment:
       - FLASK_ENV=production
@@ -43,7 +43,7 @@ services:
         condition: service_healthy
 
   backend:
-    image: ghcr.io/fondazioneedulife/stock4store-backend:main
+    image: ghcr.io/fondazioneedulife/stock4store-backend:latest
     container_name: pw_backend
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/myappdb

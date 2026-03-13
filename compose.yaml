@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   postgres:
@@ -16,15 +16,13 @@ services:
     networks:
       - app-network
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U admin -d myappdb" ]  # ← E qui
+      test: ["CMD-SHELL", "pg_isready -U admin -d myappdb"] # ← E qui
       interval: 10s
       timeout: 5s
       retries: 5
 
   ai-service:
-    build:
-      context: ./python-ai
-      dockerfile: Dockerfile
+    image: ghcr.io/fondazioneedulife/stock4store-python-ai:latest
     container_name: pw_ai_service
     environment:
       - FLASK_ENV=production
@@ -44,12 +42,8 @@ services:
       postgres:
         condition: service_healthy
 
-
-
   backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: ghcr.io/fondazioneedulife/stock4store-backend:latest
     container_name: pw_backend
     environment:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://postgres:5432/myappdb

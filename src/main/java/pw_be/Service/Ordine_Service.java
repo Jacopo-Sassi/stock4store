@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,12 +37,24 @@ public class Ordine_Service {
     private Ordini_Mapper ordiniMapper;
 
     public OrdineDto createOrdine(OrdineRequestDto ordineRequestDto) {
+        // Mappo i campi base dell'ordine (fornitoreId, ecc.)
         Ordine ordine = ordiniMapper.toEntity(ordineRequestDto);
         ordine.setStato("CREATO");
 
+        // Inizializzo sempre la lista, così non ho NPE
+        if (ordine.getItems() == null) {
+            ordine.setItems(new ArrayList<>());
+        }
+
         if (ordineRequestDto.getArticoli() != null && !ordineRequestDto.getArticoli().isEmpty()) {
+
+            // Se hai definito il mapping RequestItem -> Ordine_Item nel mapper:
+            // List<Ordine_Item> items = ordiniMapper.toItemEntities(ordineRequestDto.getArticoli());
+
+            // Se preferisci gestirlo qui (esplicito e chiaro):
             List<Ordine_Item> items = ordineRequestDto.getArticoli().stream()
                     .map(itemDto -> {
+                        // Crea articolo se non esiste
                         if (!articoliRepository.existsById(itemDto.getCodiceArticolo())) {
                             Articolo nuovoArticolo = new Articolo();
                             nuovoArticolo.setCodice(itemDto.getCodiceArticolo());
@@ -55,21 +68,45 @@ public class Ordine_Service {
                         Ordine_Item item = new Ordine_Item();
                         item.setCodiceArticolo(itemDto.getCodiceArticolo());
                         item.setQuantita(itemDto.getQuantita());
-                        item.setPrezzoUnitario(BigDecimal.ZERO);
-                        item.setSubtotale(BigDecimal.ZERO);
+
+                        BigDecimal prezzo = itemDto.getPrezzoUnitario() != null
+                                ? BigDecimal.valueOf(itemDto.getPrezzoUnitario())
+                                : BigDecimal.ZERO;
+                        item.setPrezzoUnitario(prezzo);
+
+                        // subtotale sempre calcolato nel service
+                        int qta = itemDto.getQuantita() != null ? itemDto.getQuantita() : 0;
+                        BigDecimal subtotale = prezzo.multiply(BigDecimal.valueOf(qta));
+                        item.setSubtotale(subtotale);
+
+                        // relazione con Ordine
                         item.setOrdine(ordine);
                         return item;
                     })
                     .toList();
+
             ordine.getItems().addAll(items);
         }
 
+        // Calcolo totale null-safe, ricalcolando di fatto la somma dei subtotali
         BigDecimal totale = ordine.getItems().stream()
-                .map(Ordine_Item::getSubtotale)
+                .map(item -> {
+                    BigDecimal subtotale = item.getSubtotale();
+                    if (subtotale == null) {
+                        BigDecimal prezzo = item.getPrezzoUnitario() != null ? item.getPrezzoUnitario() : BigDecimal.ZERO;
+                        int qta = item.getQuantita() != null ? item.getQuantita() : 0;
+                        subtotale = prezzo.multiply(BigDecimal.valueOf(qta));
+                        item.setSubtotale(subtotale);
+                    }
+                    return subtotale;
+                })
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
+
         ordine.setTotale(totale);
 
-        return ordiniMapper.toDto(ordineRepository.save(ordine));
+        // Salvo e ritorno DTO
+        Ordine ordineSalvato = ordineRepository.save(ordine);
+        return ordiniMapper.toDto(ordineSalvato);
     }
 
     public OrdineDto getOrdineById(Long id) {

@@ -1061,7 +1061,7 @@ components:
 
     OrdineItemRequest:
       type: object
-      required: [codiceArticolo, quantita]
+      required: [codiceArticolo, quantita, prezzoUnitario, subtotale, totaleOrdine]
       properties:
         codiceArticolo:
           type: string
@@ -1070,6 +1070,14 @@ components:
           type: integer
           minimum: 1
           example: 2
+        prezzoUnitario:
+          type: number
+          format: double
+          example: 2599.00
+        subtotale:
+          type: number
+          format: double
+          example: 5198.00
           # ↑ prezzoUnitario non richiesto: viene letto dal DB tramite codiceArticolo
 
     StatoOrdine:

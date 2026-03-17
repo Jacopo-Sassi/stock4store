@@ -56,6 +56,12 @@ public class Articolo_Service {
     }
 
     public Articolo save(Articolo articolo) {
+        if (articoliRepository.existsById(articolo.getCodice())) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Articolo con codice '" + articolo.getCodice() + "' già esistente"
+            );
+        }
         return articoliRepository.save(articolo);
     }
 

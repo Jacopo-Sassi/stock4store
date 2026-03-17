@@ -44,17 +44,14 @@ public class Articoli_Controller implements ArticoliApi {
 
     @Override
     public ResponseEntity<ArticoloDto> _createArticolo(ArticoloRequestDto articoloRequestDto) {
-        // Converti DTO -> Entity
         Articolo articolo = articoliMapper.toEntity(articoloRequestDto);
 
-        // Salva nel database
-        Articolo articoloSalvato = articoliRepository.save(articolo);
+        Articolo articoloSalvato = articoloService.save(articolo);
 
-        // Converti Entity -> DTO per la response
         ArticoloDto responseDto = articoliMapper.toDto(articoloSalvato);
-
         return ResponseEntity.status(HttpStatus.CREATED).body(responseDto);
     }
+
 
     @Override
     public ResponseEntity<Void> _deleteArticolo(String codice) {

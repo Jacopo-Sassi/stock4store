@@ -84,7 +84,7 @@ CREATE TABLE public.articoli (
                                  ean                 character varying(13)   DEFAULT ''  NOT NULL,
                                  prezzodilistino     numeric(10,2)           DEFAULT 0 NOT NULL,
                                  gruppo              character varying(15)   DEFAULT '' NOT NULL,
-                                 stato               character varying(2)    DEFAULT '' NOT NULL,
+                                 stato               character varying(2)    DEFAULT 'ST',
                                  lp1                 character(3),
                                  lp2                 character(3),
                                  lp3                 character(3),

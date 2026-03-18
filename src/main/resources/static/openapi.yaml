@@ -926,7 +926,7 @@ components:
 
     ArticoloRequest:
       type: object
-      required: [codice, descrizione, prezzodilistino, gruppo, stato]
+      required: [codice, descrizione, prezzodilistino, gruppo]
       properties:
         codice:
           type: string
@@ -938,8 +938,6 @@ components:
           type: number
           format: double
         gruppo:
-          type: string
-        stato:
           type: string
         lp1:
           type: string

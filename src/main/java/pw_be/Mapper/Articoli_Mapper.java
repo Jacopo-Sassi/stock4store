@@ -38,7 +38,7 @@ public interface Articoli_Mapper {
     @Mapping(target = "stagione",        constant = "PERMANENTE")
     @Mapping(target = "linkimmagine",    constant = "")
     @Mapping(target = "scodescri",       constant = "")
-    @Mapping(target = "tipo",            constant = "ST")
+    @Mapping(target = "tipo",            constant = "")
     @Mapping(target = "iva",             constant = "")
     @Mapping(target = "codfornitore",    source = "codfornitore")
     @Mapping(target = "peso",            source = "peso")
